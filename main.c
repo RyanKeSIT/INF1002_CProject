@@ -11,10 +11,10 @@ https://share.google/s5Psd3pMrIGDPOtcX
 int main() {
   int operation_no;
   int input;
-  StudentRecords s = {{2306969, "Hello", "INF1001", 99.9},
-                      {2306970, "Hello 1", "INF1002", 88.8},
-                      {2306971, "Hello 3", "INF1003", 49.9}};
-  int studentCount = sizeof s / sizeof s[0];
+  StudentRecords db[] = {{2306969, "Hello", "INF1001", 99.9},
+                         {2306970, "Hello 1", "INF1002", 88.8},
+                         {2306971, "Hello 3", "INF1003", 49.9}};
+  int recordCount = sizeof db / sizeof db[0];
 
   do {
     printf("==================================\n");
@@ -54,7 +54,7 @@ int main() {
     case 5:
       update_operation();
     case 6:
-      delete_operation(s, studentCount);
+      delete_operation(db, &recordCount);
     case 7:
       save_operation();
     case 8:

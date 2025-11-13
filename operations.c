@@ -1,4 +1,5 @@
 #include "cms.h"
+#include "print.c"
 #include <stdio.h>
 
 int open_operation() {}
@@ -21,7 +22,7 @@ void update_operation() {
 }
 
 // Me
-void delete_operation(StudentRecords s, int studentCount) {
+void delete_operation(StudentRecords *s, int *recordCount) {
   int targetedStudentID;
   char output;
 
@@ -30,31 +31,25 @@ void delete_operation(StudentRecords s, int studentCount) {
   scanf("%d", &targetedStudentID);
 
   // Get to the row of the student ID to delete
-  for (int i = 0; i < studentCount; i++) {
+  for (int i = 0; i < *recordCount; i++) {
     // Check if student ID is found
     if (s[i].ID == targetedStudentID) {
-      printf("yay");
+      print(
+          "CMS: Are you sure you want to delete record with ID=%d? Type \"Y\" "
+          "to Confirm or type \"N\" to cancel.",
+          targetedStudentID);
 
       //   Decrement the student count
-      studentCount--;
+      *recordCount = *recordCount - 1;
+      return;
     }
 
     // Check if list is exhausted
-    else if (i == studentCount - 1) {
-      // Formatting strings
-      char *format_string = "CMS: The record with ID=%d does not exist.";
-      char result_string[64];
-      snprintf(result_string, 64, format_string, targetedStudentID);
-
-      printf("%s", result_string);
-
-      //   Return array of structs as-is
+    else if (i == *recordCount - 1) {
+      print("CMS: The record with ID=%d does not exist.", targetedStudentID);
+      return;
     }
   }
-
-  // Delete the record
-
-  // Return data to main process
 }
 
 void save_operation() {}
