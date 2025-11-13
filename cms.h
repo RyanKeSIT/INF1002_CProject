@@ -8,7 +8,8 @@ typedef struct {
     char Name[MAX_LENGTH_NAME];
     char Programme[MAX_PROGRAMME_NAME];
     float Mark;
-} StudentRecords;
+} StudentRecord;
+typedef StudentRecord StudentRecords[];
 
 int open_operation();
 void showall_operation();
