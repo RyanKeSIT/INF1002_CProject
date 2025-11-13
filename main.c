@@ -17,20 +17,20 @@ int main() {
   int recordCount = sizeof db / sizeof db[0];
 
   do {
-    printf("==================================\n");
-    printf("Class Management System (CMS) Menu\n");
-    printf("==================================\n");
-    printf("1. Open\n");
-    printf("2. Show All\n");
-    printf("3. Insert\n");
-    printf("4. Query\n");
-    printf("5. Update\n");
-    printf("6. Delete\n");
-    printf("7. Save\n");
-    printf("8. Sort Student Records\n");
-    printf("9. Show summary\n");
-    printf("10. Unique Feature\n");
-    printf("Please Select an Operation to Perform: ");
+    print("==================================\n");
+    print("Class Management System (CMS) Menu\n");
+    print("==================================\n");
+    print("1. Open\n");
+    print("2. Show All\n");
+    print("3. Insert\n");
+    print("4. Query\n");
+    print("5. Update\n");
+    print("6. Delete\n");
+    print("7. Save\n");
+    print("8. Sort Student Records\n");
+    print("9. Show summary\n");
+    print("10. Unique Feature\n");
+    print("Please Select an Operation to Perform: ");
     input = scanf("%d", &operation_no);
 
     // Checks if input is a decimal, else keeps looping for valid input
@@ -54,7 +54,7 @@ int main() {
     case 5:
       update_operation();
     case 6:
-      delete_operation(db, &recordCount);
+      delete_operation(db, recordCount);
     case 7:
       save_operation();
     case 8:
