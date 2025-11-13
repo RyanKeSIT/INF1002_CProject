@@ -4,10 +4,10 @@
 #define MAX_PROGRAMME_NAME 20
 
 typedef struct {
-    int ID;
-    char Name[MAX_LENGTH_NAME];
-    char Programme[MAX_PROGRAMME_NAME];
-    float Mark;
+  int ID;
+  char Name[MAX_LENGTH_NAME];
+  char Programme[MAX_PROGRAMME_NAME];
+  float Mark;
 } StudentRecords;
 
 int open_operation();
