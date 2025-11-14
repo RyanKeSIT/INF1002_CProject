@@ -1,6 +1,6 @@
-#include "./tools/print.c"
 #include "./tools/splice.c"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int open_operation() {}
@@ -11,21 +11,41 @@ void insert_operation() {}
 
 void query_operation() {}
 
-// Me
-void update_operation() {
-  // Get the student ID record to edit
+void update_operation(StudentRecords *s, int recordCount, char *command) {
+  int targetedStudentID;
+  char targetedField[20];
+  char targetedValue[100];
+  //   This is parsing the command e.g. `UPDATE ID=2501234 Mark=69.8`
+  int result = sscanf(command, "UPDATE ID=%d %[^=]=%99[^\n]",
+                      &targetedStudentID, targetedField, targetedValue);
 
   // Get to the row of the student ID to edit
+  for (int i = 0; i < recordCount; i++) {
+    // Check if student ID is found
+    if (s[i].ID == targetedStudentID) {
+      // Update the struct field based on supplied key
+      if (_stricmp(targetedField, "Programme") == 0) {
+        strncpy(s[i].Programme, targetedValue, sizeof s[i].Programme - 1);
+        printf("CMS: The record with ID=%d is successfully updated.",
+               targetedStudentID);
+      } else if (_stricmp(targetedField, "Mark") == 0) {
+        s[i].Mark = atof(targetedValue);
+        printf("CMS: The record with ID=%d is successfully updated.",
+               targetedStudentID);
+      }
 
-  // Get the column of the row record to edit
+      return;
+    }
 
-  // Return the edited data to main process
+    // Check if list is exhausted
+    else if (i == recordCount - 1) {
+      printf("CMS: The record with ID=%d does not exist.", targetedStudentID);
+    }
+  }
 }
 
-// Me
 void delete_operation(StudentRecords *s, int recordCount) {
   int targetedStudentID;
-  char output;
 
   printf("P3_4: DELETE ID=");
   // Get the student ID record to delete
@@ -36,11 +56,11 @@ void delete_operation(StudentRecords *s, int recordCount) {
     // Check if student ID is found
     if (s[i].ID == targetedStudentID) {
       char confirmationInput;
-      print(
+      printf(
           "CMS: Are you sure you want to delete record with ID=%d? Type \"Y\" "
           "to Confirm or type \"N\" to cancel.\n",
           targetedStudentID);
-      print("P3_4: ");
+      printf("P3_4: ");
       // Get the confirmation input and force to upper case
       scanf("%s", &confirmationInput);
 
@@ -50,11 +70,11 @@ void delete_operation(StudentRecords *s, int recordCount) {
         splice(s, &recordCount, i);
 
         // Print success action
-        print("CMS: The record with ID=%d is successfully deleted.",
-              targetedStudentID);
+        printf("CMS: The record with ID=%d is successfully deleted.",
+               targetedStudentID);
       } else if (strcmp(&confirmationInput, "N") == 0 ||
                  strcmp(&confirmationInput, "n") == 0) {
-        print("CMS: The deletion is cancelled.\n");
+        printf("CMS: The deletion is cancelled.\n");
         // Retry this whole function again
         delete_operation(s, recordCount);
       }
@@ -66,7 +86,7 @@ void delete_operation(StudentRecords *s, int recordCount) {
 
     // Check if list is exhausted
     else if (i == recordCount - 1) {
-      print("CMS: The record with ID=%d does not exist.\n", targetedStudentID);
+      printf("CMS: The record with ID=%d does not exist.\n", targetedStudentID);
       delete_operation(s, recordCount);
     }
   }
