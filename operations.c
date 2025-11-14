@@ -16,8 +16,8 @@ void update_operation(StudentRecords *s, int recordCount, char *command) {
   char targetedField[20];
   char targetedValue[100];
   //   This is parsing the command e.g. `UPDATE ID=2501234 Mark=69.8`
-  int result = sscanf(command, "UPDATE ID=%d %[^=]=%99[^\n]",
-                      &targetedStudentID, targetedField, targetedValue);
+  sscanf(command, "UPDATE ID=%d %[^=]=%99[^\n]", &targetedStudentID,
+         targetedField, targetedValue);
 
   // Get to the row of the student ID to edit
   for (int i = 0; i < recordCount; i++) {
@@ -44,12 +44,10 @@ void update_operation(StudentRecords *s, int recordCount, char *command) {
   }
 }
 
-void delete_operation(StudentRecords *s, int recordCount) {
+void delete_operation(StudentRecords *s, int recordCount, char *command) {
   int targetedStudentID;
-
-  printf("P3_4: DELETE ID=");
   // Get the student ID record to delete
-  scanf("%d", &targetedStudentID);
+  sscanf(command, "DELETE ID=%d", &targetedStudentID);
 
   // Get to the row of the student ID to delete
   for (int i = 0; i < recordCount; i++) {
@@ -64,19 +62,16 @@ void delete_operation(StudentRecords *s, int recordCount) {
       // Get the confirmation input and force to upper case
       scanf("%s", &confirmationInput);
 
-      if (strcmp(&confirmationInput, "Y") == 0 ||
-          strcmp(&confirmationInput, "y") == 0) {
+      if (_stricmp(&confirmationInput, "Y") == 0) {
         // Delete the record
         splice(s, &recordCount, i);
 
         // Print success action
         printf("CMS: The record with ID=%d is successfully deleted.",
                targetedStudentID);
-      } else if (strcmp(&confirmationInput, "N") == 0 ||
-                 strcmp(&confirmationInput, "n") == 0) {
+      } else if (_stricmp(&confirmationInput, "N") == 0) {
         printf("CMS: The deletion is cancelled.\n");
         // Retry this whole function again
-        delete_operation(s, recordCount);
       }
 
       //   Decrement the student count
@@ -87,7 +82,6 @@ void delete_operation(StudentRecords *s, int recordCount) {
     // Check if list is exhausted
     else if (i == recordCount - 1) {
       printf("CMS: The record with ID=%d does not exist.\n", targetedStudentID);
-      delete_operation(s, recordCount);
     }
   }
 }

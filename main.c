@@ -59,11 +59,12 @@ int main() {
       query_operation();
       break;
     case 5:
-      char ops[100] = "UPDATE ID=2306969 mark=19.9";
+      char ops[100] = "UPDATE ID=2306969 mark=19.9"; // TEMPORARY
       update_operation(db, recordCount, ops);
       break;
     case 6:
-      delete_operation(db, recordCount);
+      char ops1[100] = "DELETE ID=2306969"; // TEMPORARY
+      delete_operation(db, recordCount, ops1);
       break;
     case 7:
       save_operation();
