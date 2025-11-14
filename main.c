@@ -11,27 +11,30 @@ https://share.google/s5Psd3pMrIGDPOtcX
 int main() {
   int operation_no;
   int input;
+  //   TEMPORARY
   StudentRecords db[] = {{2306969, "Hello", "INF1001", 99.9},
                          {2306970, "Hello 1", "INF1002", 88.8},
                          {2306971, "Hello 3", "INF1003", 49.9}};
   int recordCount = sizeof db / sizeof db[0];
+  //   TEMPORARY
 
   do {
-    print("==================================\n");
-    print("Class Management System (CMS) Menu\n");
-    print("==================================\n");
-    print("1. Open\n");
-    print("2. Show All\n");
-    print("3. Insert\n");
-    print("4. Query\n");
-    print("5. Update\n");
-    print("6. Delete\n");
-    print("7. Save\n");
-    print("8. Sort Student Records\n");
-    print("9. Show summary\n");
-    print("10. Unique Feature\n");
-    print("Please Select an Operation to Perform: ");
+    printf("==================================\n");
+    printf("Class Management System (CMS) Menu\n");
+    printf("==================================\n");
+    printf("1. Open\n");
+    printf("2. Show All\n");
+    printf("3. Insert\n");
+    printf("4. Query\n");
+    printf("5. Update\n");
+    printf("6. Delete\n");
+    printf("7. Save\n");
+    printf("8. Sort Student Records\n");
+    printf("9. Show summary\n");
+    printf("10. Unique Feature\n");
+    printf("Please Select an Operation to Perform: ");
     input = scanf("%d", &operation_no);
+    getchar();
 
     // Checks if input is a decimal, else keeps looping for valid input
     if (input != 1) {
@@ -45,24 +48,36 @@ int main() {
     switch (operation_no) {
     case 1:
       open_operation();
+      break;
     case 2:
       showall_operation();
+      break;
     case 3:
       insert_operation();
+      break;
     case 4:
       query_operation();
+      break;
     case 5:
-      update_operation();
+      char ops[100] = "UPDATE ID=2306969 mark=19.9"; // TEMPORARY
+      update_operation(db, recordCount, ops);
+      break;
     case 6:
-      delete_operation(db, recordCount);
+      char ops1[100] = "DELETE ID=2306969"; // TEMPORARY
+      delete_operation(db, recordCount, ops1);
+      break;
     case 7:
       save_operation();
+      break;
     case 8:
       sort_operation();
+      break;
     case 9:
       summary_statics_operation();
+      break;
     case 10:
       unique_operation();
+      break;
     }
   } while (input != 1 || operation_no < 1 || operation_no > 10);
 
