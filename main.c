@@ -83,6 +83,10 @@ int main(){
                 save_operation(DB_FILENAME, db, recordCount, custom_column, num_custom_cols);
             }
         }
+        else if (strcmp(commandPrefix, "SORT") == 0) {
+            // Show summary of Total number of students, Average mark, Highest and lowest mark
+            sort_operation();
+        }
         else if (strcmp(commandPrefix, "SUMMARY") == 0) {
             // Show summary of Total number of students, Average mark, Highest and lowest mark
             summary_statics_operation();

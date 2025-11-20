@@ -484,8 +484,110 @@ void save_column_metafile(newColumn custom_column[], int num_custom_cols) {
 /*----------------------------------
 Implement sorting of student records 
 -----------------------------------*/
-void sort_operation(){
+void sort_operation(void){
+    char input[100];
+    char field[20];
+    char order[20];
+    int count;
 
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF){}
+
+    printf("Which order would you like to sort it by?\n");
+    printf("  - id asc      (Ascending Student ID)\n");
+    printf("  - id desc     (Descending Student ID)\n");
+    printf("  - marks asc   (Ascending Marks)\n");
+    printf("  - marks desc  (Descending Marks)\n");
+    printf("Please type your choice (e.g. \"id asc\"): ");
+
+    if (fgets(input, sizeof(input), stdin) == NULL)
+    {
+        printf("\nInput error.\n");
+        return;
+    }
+
+    // remove trailing newline
+    input[strcspn(input, "\n")] = '\0';
+
+    // parse into two words: field + order
+    int scanned = sscanf(input, "%19s %19s", field, order);
+    if (scanned != 2)
+    {
+        printf("\nInvalid format. Please type something like \"id asc\" or \"marks desc\".\n");
+        return;
+    }
+
+    // convert to lowercase for case-insensitive comparison
+    for (int i = 0; field[i]; i++)
+        field[i] = (char)tolower((unsigned char)field[i]);
+    for (int i = 0; order[i]; i++)
+        order[i] = (char)tolower((unsigned char)order[i]);
+
+    // decide which sort to use
+    if (strcmp(field, "id") == 0 && strcmp(order, "asc") == 0)
+    {
+        // sort by ID (Ascending)
+        qsort(db, count, sizeof(StudentRecords), compIDAscend);
+    }
+    else if (strcmp(field, "id") == 0 && strcmp(order, "desc") == 0)
+    {
+        // sort by ID (Descending)
+        qsort(db, count, sizeof(StudentRecords), compIDDescend);
+    }
+    else if ((strcmp(field, "marks") == 0 || strcmp(field, "mark") == 0) &&
+             strcmp(order, "asc") == 0)
+    {
+        // sort by Marks (Ascending)
+        qsort(db, count, sizeof(StudentRecords), compMarksAscend);
+    }
+    else if ((strcmp(field, "marks") == 0 || strcmp(field, "mark") == 0) &&
+             strcmp(order, "desc") == 0)
+    {
+        // sort by Marks (Descending)
+        qsort(db, count, sizeof(StudentRecords), compMarksDescend);
+    }
+    else
+    {
+        printf("\nInvalid choice. Examples of valid inputs:\n");
+        printf("  id asc\n");
+        printf("  id desc\n");
+        printf("  marks asc\n");
+        printf("  marks desc\n");
+        return;
+    }
+
+    // show sorted records
+    showall_operation();
+}
+// Custom function to sort the ID (Ascending Order)
+int compIDAscend(const void *a, const void *b)
+{
+    const StudentRecords *student1 = (const StudentRecords *)a;
+    const StudentRecords *student2 = (const StudentRecords *)b;
+    return student1->ID - student2->ID;
+}
+
+int compIDDescend(const void *a, const void *b)
+{
+    const StudentRecords *student1 = (const StudentRecords *)a;
+    const StudentRecords *student2 = (const StudentRecords *)b;
+    return student2->ID - student1->ID;
+}
+
+// Custom function to sort the Marks (Ascending Order)
+int compMarksAscend(const void *a, const void *b)
+{
+    const StudentRecords *student1 = (const StudentRecords *)a;
+    const StudentRecords *student2 = (const StudentRecords *)b;
+    return student1->Mark - student2->Mark;
+}
+
+// Custom function to sort the Marks (Descending Order)
+int compMarksDescend(const void *a, const void *b)
+{
+    const StudentRecords *student1 = (const StudentRecords *)a;
+    const StudentRecords *student2 = (const StudentRecords *)b;
+    return student2->Mark - student1->Mark;
 }
 
 /*------------------------

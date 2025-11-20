@@ -88,4 +88,8 @@ int checkColumnNameExists(const char *colName, newColumn custom_column[], int nu
 int isValidColumnType(const char *colType); //For add column operation
 void save_column_metafile(newColumn custom_column[], int num_custom_cols);
 void load_column_metadata(const char *filename, newColumn custom_column[], int *num_custom_cols);
+int compIDAscend(const void *a, const void *b); // Custom function to sort the ID (Ascending Order)
+int compIDDescend(const void *a, const void *b); // Custom function to sort the ID (Descending Order)
+int compMarksAscend(const void *a, const void *b); // Custom function to sort the Marks (Ascending Order)
+int compMarksDescend(const void *a, const void *b); // Custom function to sort the Marks (Descending Order)
 #endif
