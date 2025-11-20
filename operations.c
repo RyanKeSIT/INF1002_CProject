@@ -421,7 +421,6 @@ void save_operation(const char *filename, const StudentRecords *db, int recordCo
     
     // Write custom column names
     for (int j = 0; j < num_custom_cols; j++) {
-        int print_length = custom_column[j].length + 2;
         fprintf(fptr, "\t\t%s", custom_column[j].name);
     }
     fprintf(fptr, "\n");
@@ -493,7 +492,49 @@ void sort_operation(){
 Implement summary commands
 -------------------------*/
 void summary_statics_operation() {
+    if (!databaseLoaded) {
+        printf("CMS: Database is not loaded. Please load the database first.\n");
+        return;
+    }
 
+    if (recordCount <= 1) { // Only header exists
+        printf("CMS: No student records available.\n");
+        return;
+    }
+
+    int totalStudents = recordCount - 1;   // recordCount is total lines including header, -1 excludes header and get actual students 
+    float sum = 0;
+
+    // Initialize using first student
+    float highest = records[1].Mark;
+    float lowest = records[1].Mark;
+    char highestName[MAX_LENGTH_NAME];
+    char lowestName[MAX_LENGTH_NAME];
+    strcpy(highestName, records[1].Name);
+    strcpy(lowestName, records[1].Name);
+
+    for (int i = 1; i < recordCount; i++) {
+        float mark = records[i].Mark;
+        sum += mark;
+
+        if (mark > highest) {
+            highest = mark;
+            strcpy(highestName, records[i].Name);
+        }
+
+        if (mark < lowest) {
+            lowest = mark;
+            strcpy(lowestName, records[i].Name);
+        }
+    }
+
+    float avg = sum / totalStudents;
+
+    printf("CMS: Summary of Student Records\n");
+    printf("Total number of students : %d\n", totalStudents);
+    printf("Average mark            : %.2f\n", avg);
+    printf("Highest mark            : %.1f (%s)\n", highest, highestName);
+    printf("Lowest mark             : %.1f (%s)\n", lowest, lowestName);
 }
 
 /*-------------------------------------------
@@ -506,7 +547,7 @@ void add_column_operation(const char* command, newColumn custom_column[], int *n
 
     // Check if number of existing columns exceeds the maximum number of columns specified
     if (*num_custom_cols >= MAX_CUSTOM_COLUMN_NO) {
-        printf("Error: Cannot add column. Maximum number of custom columns (%d) reached.\n", MAX_CUSTOM_COLUMN_NO);
+        printf("CMS: Cannot add column. Maximum number of custom columns (%d) reached.\n", MAX_CUSTOM_COLUMN_NO);
         return;
     }
 
@@ -514,29 +555,29 @@ void add_column_operation(const char* command, newColumn custom_column[], int *n
     int itemsRead = sscanf(command, "ADD COLUMN Name=%49[^ ] Type=%49[^ ] Length=%d", colName, colType, &colLength);
 
     if (itemsRead != 3) {
-        printf("Error: Invalid ADD COLUMN command format.\n");
+        printf("CMS: Invalid ADD COLUMN command format.\n");
         printf("Usage: ADD COLUMN Name=<ColumnName> Type=<ColumnType> Length=<ColumnLength>\n");
         return;
     }
     
     // Validate the column name by length
     if (strlen(colName) >= MAX_CUSTOM_COL_NAME) {
-        printf("Error: Column name '%s' is too long (max %d characters).\n", colName, MAX_CUSTOM_COL_NAME - 1);
+        printf("CMS: Column name '%s' is too long (max %d characters).\n", colName, MAX_CUSTOM_COL_NAME - 1);
         return;
     }
 
     // Check if the name of column to add already exists 
     if (checkColumnNameExists(colName, custom_column, *num_custom_cols)) {
-        printf("Error: Column name '%s' already exists in the database.\n", colName);
+        printf("CMS: Column name '%s' already exists in the database.\n", colName);
         return;
     }
 
     // Check if column type is valid
     if (!isValidColumnType(colType)) {
-        printf("Error: Invalid column type '%s'.\n", colType);
-        printf("Accepted types are: ");
+        printf("CMS: Invalid column type '%s'.\n", colType);
+        printf("Valid types are: ");
         for (int i = 0; i < NUM_COLUMN_TYPES; i++) {
-            printf("%s%s", VALID_COLUMN_TYPES[i], (i == NUM_COLUMN_TYPES - 1) ? "" : ", ");
+            printf("%s%s", valid_column_types[i], (i == NUM_COLUMN_TYPES - 1) ? "" : ", ");
         }
         printf(".\n");
         return;
@@ -544,7 +585,7 @@ void add_column_operation(const char* command, newColumn custom_column[], int *n
 
     //Check if input for new column length is between 0 and 100
     if (colLength <= 0 || colLength > 100) { 
-        printf("Error: Column length must be a positive integer and less than or equal to 100.\n");
+        printf("CMS: Column length must be a positive integer and less than or equal to 100.\n");
         return;
     }
 
@@ -556,14 +597,14 @@ void add_column_operation(const char* command, newColumn custom_column[], int *n
 
     (*num_custom_cols)++; // Increment the counter for number of columns 
 
-    printf("Successfully added new column: Name='%s', Type='%s', Length='%d'.\n", colName, colType, colLength);
+    printf("CMS: Successfully added new column: Name='%s', Type='%s', Length='%d'.\n", colName, colType, colLength);
 }
 
 //Check column name
 int checkColumnNameExists(const char *colName, newColumn custom_column[], int num_custom_cols) {
     // Check with initial default columns
     for (int i = 0; i < NUM_DEFAULT_COLS; i++) {
-        if (strcmp(colName, DEFAULT_COLUMN_NAMES[i]) == 0) {
+        if (strcmp(colName, default_column_names[i]) == 0) {
             return 1; // Column name is a reserved default field
         }
     }
@@ -581,7 +622,7 @@ int isValidColumnType(const char *colType) {
     // Check against the array of valid types
     for (int i = 0; i <NUM_COLUMN_TYPES; i++) {
         // Use strcmp for case-sensitive check, adjust if case-insensitivity is preferred
-        if (strcmp(colType, VALID_COLUMN_TYPES[i]) == 0) {
+        if (strcmp(colType, valid_column_types[i]) == 0) {
             return 1; // Valid type
         }
     }
