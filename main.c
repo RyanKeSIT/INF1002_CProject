@@ -50,7 +50,7 @@ int main(){
         }
         else if (strncmp(commandPrefix, "UPDATE", 6) == 0){
             // Update the data for a record with a given student ID
-            update_operation();
+            update_operation(command);
         }
         else if (strcmp(commandPrefix, "DELETE") == 0){
             //  Delete the record with a given student ID
