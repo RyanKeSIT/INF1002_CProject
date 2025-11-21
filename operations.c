@@ -502,6 +502,10 @@ void update_operation(char *command) {
         if (i == recordCount - 1) {
           printf("CMS: The record with ID=%d does not exist.\n",
                  targetedStudentID);
+
+          // Return to main function. If there are no records, no point looking
+          // into other fields
+          return;
         }
       }
     }
@@ -585,8 +589,14 @@ void delete_operation(char *command) {
     // Check if list is exhausted
     if (i == recordCount - 1) {
       printf("CMS: The record with ID=%d does not exist.\n", targetedStudentID);
+
+      // Return to main function
+      return;
     }
   }
+
+  //   There are no records
+  printf("CMS: There are no records to delete.\n");
 }
 
 /*----------------------------------------------------------------
