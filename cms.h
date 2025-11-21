@@ -71,7 +71,7 @@ const char *valid_column_types[NUM_COLUMN_TYPES] = {"int", "float", "string"};
 void open_operation(const char *filename);
 void showall_operation();
 void insert_operation(const char* command);
-void query_operation();
+void query_operation(char* command);
 void update_operation();
 void delete_operation();
 void save_operation(const char *filename, const StudentRecords *db, int count, newColumn custom_column[], int num_custom_cols);

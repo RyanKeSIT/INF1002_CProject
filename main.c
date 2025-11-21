@@ -63,7 +63,7 @@ int main(){
         }
         else if (strncmp(commandPrefix, "QUERY", 5) == 0){
             // Search if there is any existing record with a given student ID
-            query_operation();
+            query_operation(command);
         }
         else if (strncmp(commandPrefix, "UPDATE", 6) == 0){
             // Update the data for a record with a given student ID

@@ -119,40 +119,43 @@ void open_operation(const char *filename)
             strncpy(records[recordCount].Programme, programme, sizeof(records[recordCount].Programme) - 1);
             records[recordCount].Mark = mark;
             
-            // Read custom column data if they exist
-            char *current_pos = line;
+            // Skip 4 default columns to reach the start of custom columns
+            char *current_pos = line; // Pointer to current position in the current line being processed
             
-            // Skip the default columns to get to custom columns
+            // Loop through data of default columns to get to custom columns
             for (int i = 0; i < 4; i++) {
-                current_pos = strchr(current_pos, '\t');
-                if (current_pos) current_pos++;
+                current_pos = strchr(current_pos, '\t'); //Find next tab
+                if (current_pos) current_pos++; // Skip the tab to go to next custom column data
             }
             
-            // Read custom column data
+            // Loop through custom columns to read custom column data
             for (int j = 0; j < num_custom_cols && current_pos; j++) {
                 // Find the next tab or newline
                 char *next_tab = strchr(current_pos, '\t');
-                char *newline = strchr(current_pos, '\n');
+                char *newline = strchr(current_pos, '\n'); 
                 
                 // Determine the end of this field
-                char *field_end = next_tab;
+                char *field_end = next_tab; // points to tab after the current custom data
+                //If there is no more tabs; end of line 
                 if (!field_end || (newline && newline < field_end)) {
                     field_end = newline;
                 }
-                
+                //If tab
                 if (field_end) {
-                    int field_length = field_end - current_pos;
+                    int field_length = field_end - current_pos; 
+                    // Checks if custom data is empty
                     if (field_length > 0) {
                         char field_data[MAX_COLUMN_DATA_LENGTH];
-                        strncpy(field_data, current_pos, field_length);
+                        strncpy(field_data, current_pos, field_length); //Copy custom data 
                         field_data[field_length] = '\0';
                         
                         // Trim whitespace
-                        char *start = field_data;
-                        char *end = field_data + strlen(field_data) - 1;
-                        while (isspace(*start)) start++;
-                        while (end > start && isspace(*end)) end--;
-                        *(end + 1) = '\0';
+                        char *start = field_data; //points to space before field
+                        char *end = field_data + strlen(field_data) - 1; //points to space after field
+                        while (isspace(*start)) 
+                            start++; // Skip spaces
+                        while (end > start && isspace(*end)) end--; // Skip trailing spaces
+                        *(end + 1) = '\0'; //// Terminate the string at the new end position after trimming
                         
                         // Store data based on column type
                         if (strcmp(custom_column[j].type, "int") == 0) {
@@ -167,7 +170,7 @@ void open_operation(const char *filename)
                         }
                     }
                     
-                    current_pos = next_tab ? next_tab + 1 : NULL;
+                    current_pos = next_tab ? next_tab + 1 : NULL; //Move to the next custom column data
                 }
             }
 
@@ -431,8 +434,63 @@ int checkRecordIDExist_operation(int id)
 /*----------------------------------------------------------------
 To search if there is any existing record with a given student ID.
 -----------------------------------------------------------------*/
-void query_operation() {
+void query_operation(char *command)
+{
+    // Expected format: QUERY ID=<id>
 
+    char *id_ptr = strstr(command, "ID=");
+    if (id_ptr == NULL)
+    {
+        printf("Invalid format. Please use: QUERY ID=<id>\n");
+        return;
+    }
+
+    id_ptr += 3; // move pointer past "ID="
+
+    // Convert the ID part to a number
+    char *endptr;
+    long query_ID_value = strtol(id_ptr, &endptr, 10);
+
+    // Check validity: no digits read
+    if (endptr == id_ptr)
+    {
+        printf("Invalid ID. Please ensure only numeric digits are used.\n");
+        return;
+    }
+
+    // Check remaining characters
+    while (*endptr != '\0')
+    {
+        if (!isspace((unsigned char)*endptr))
+        {
+            printf("Invalid characters after ID. Only digits allowed.\n");
+            return;
+        }
+        endptr++;
+    }
+
+    printf("You entered ID: %ld\n", query_ID_value);
+
+    printf("\n%-10s  %-20s  %-24s  %-5s\n", "ID", "Name", "Programme", "Mark");
+    printf("---------------------------------------------------------------------\n");
+
+    int found = 0;
+
+    for (int i = 0; i < recordCount; i++)
+    {
+        if (db[i].ID == query_ID_value)
+        {
+            printf("%-10d  %-20s  %-24s  %-5.2f\n",
+                   db[i].ID, db[i].Name, db[i].Programme, db[i].Mark);
+            found = 1;
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        printf("Record not found.\n");
+    }
 }
 
 /*-----------------------------------------------------
@@ -534,75 +592,86 @@ void save_column_metafile(newColumn custom_column[], int num_custom_cols) {
 /*----------------------------------
 Implement sorting of student records 
 -----------------------------------*/
-void sort_operation(void){
+void sort_operation(void)
+{
     char input[100];
     char field[20];
     char order[20];
 
     int c;
-    while ((c = getchar()) != '\n' && c != EOF){}
-
-    printf("Which order would you like to sort it by?\n");
-    printf("  - id asc      (Ascending Student ID)\n");
-    printf("  - id desc     (Descending Student ID)\n");
-    printf("  - marks asc   (Ascending Marks)\n");
-    printf("  - marks desc  (Descending Marks)\n");
-    printf("Please type your choice (e.g. \"id asc\"): ");
-
-    if (fgets(input, sizeof(input), stdin) == NULL)
+    while ((c = getchar()) != '\n' && c != EOF)
     {
-        printf("\nInput error.\n");
-        return;
     }
 
-    // remove trailing newline
-    input[strcspn(input, "\n")] = '\0';
+    while (1) // <-- Loop until user enters valid sort choice
+    {
 
-    // parse into two words: field + order
-    int scanned = sscanf(input, "%19s %19s", field, order);
-    if (scanned != 2)
-    {
-        printf("\nInvalid format. Please type something like \"id asc\" or \"marks desc\".\n");
-        return;
-    }
+        printf("Which order would you like to sort it by?\n");
+        printf("  - id asc      (Ascending Student ID)\n");
+        printf("  - id desc     (Descending Student ID)\n");
+        printf("  - marks asc   (Ascending Marks)\n");
+        printf("  - marks desc  (Descending Marks)\n");
+        printf("Please type your choice (e.g. \"id asc\"): ");
 
-    // convert to lowercase for case-insensitive comparison
-    for (int i = 0; field[i]; i++)
-        field[i] = (char)tolower((unsigned char)field[i]);
-    for (int i = 0; order[i]; i++)
-        order[i] = (char)tolower((unsigned char)order[i]);
+        if (fgets(input, sizeof(input), stdin) == NULL)
+        {
+            printf("\nInput error.\n");
+            continue; // ask again
+        }
 
-    // decide which sort to use
-    if (strcmp(field, "id") == 0 && strcmp(order, "asc") == 0)
-    {
-        // sort by ID (Ascending)
-        qsort(db, recordCount - 1, sizeof(StudentRecords), compIDAscend);
-    }
-    else if (strcmp(field, "id") == 0 && strcmp(order, "desc") == 0)
-    {
-        // sort by ID (Descending)
-        qsort(db, recordCount - 1, sizeof(StudentRecords), compIDDescend);
-    }
-    else if ((strcmp(field, "marks") == 0 || strcmp(field, "mark") == 0) &&
-             strcmp(order, "asc") == 0)
-    {
-        // sort by Marks (Ascending)
-        qsort(db, recordCount - 1, sizeof(StudentRecords), compMarksAscend);
-    }
-    else if ((strcmp(field, "marks") == 0 || strcmp(field, "mark") == 0) &&
-             strcmp(order, "desc") == 0)
-    {
-        // sort by Marks (Descending)
-        qsort(db, recordCount - 1, sizeof(StudentRecords), compMarksDescend);
-    }
-    else
-    {
-        printf("\nInvalid choice. Examples of valid inputs:\n");
-        printf("  id asc\n");
-        printf("  id desc\n");
-        printf("  marks asc\n");
-        printf("  marks desc\n");
-        return;
+        // remove trailing newline
+        input[strcspn(input, "\n")] = '\0';
+
+        // parse into two words: field + order
+        int scanned = sscanf(input, "%19s %19s", field, order);
+        if (scanned != 2)
+        {
+            printf("\nInvalid format. Please type something like \"id asc\" or \"marks desc\".\n");
+            continue; // ask again
+        }
+
+        // convert to lowercase for case-insensitive comparison
+        for (int i = 0; field[i]; i++)
+            field[i] = (char)tolower((unsigned char)field[i]);
+        for (int i = 0; order[i]; i++)
+            order[i] = (char)tolower((unsigned char)order[i]);
+
+        // decide which sort to use
+        if (strcmp(field, "id") == 0 && strcmp(order, "asc") == 0)
+        {
+            // sort by ID (Ascending)
+            qsort(db, recordCount - 1, sizeof(StudentRecords), compIDAscend);
+            break;
+        }
+        else if (strcmp(field, "id") == 0 && strcmp(order, "desc") == 0)
+        {
+            // sort by ID (Descending)
+            qsort(db, recordCount - 1, sizeof(StudentRecords), compIDDescend);
+            break;
+        }
+        else if ((strcmp(field, "marks") == 0 || strcmp(field, "mark") == 0) &&
+                 strcmp(order, "asc") == 0)
+        {
+            // sort by Marks (Ascending)
+            qsort(db, recordCount - 1, sizeof(StudentRecords), compMarksAscend);
+            break;
+        }
+        else if ((strcmp(field, "marks") == 0 || strcmp(field, "mark") == 0) &&
+                 strcmp(order, "desc") == 0)
+        {
+            // sort by Marks (Descending)
+            qsort(db, recordCount - 1, sizeof(StudentRecords), compMarksDescend);
+            break;
+        }
+        else
+        {
+            printf("\nInvalid choice. Examples of valid inputs:\n");
+            printf("  id asc\n");
+            printf("  id desc\n");
+            printf("  marks asc\n");
+            printf("  marks desc\n");
+            continue; // ask again
+        }
     }
 
     // show sorted records
@@ -751,32 +820,32 @@ void add_column_operation(const char* command, newColumn custom_column[], int *n
     printf("CMS: Successfully added new column: Name='%s', Type='%s', Length='%d'.\n", colName, colType, colLength);
     // Ask user if they want to input data for existing records
     if (databaseLoaded && recordCount > 1) {
-    char input[10];
-    int validInput = 0;
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-    
-    while (!validInput) {
-        printf("CMS: Do you want to input data for the new column '%s'? (y/n): ", colName);
+        char input[10];
+        int validInput = 0;
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
         
-        if (fgets(input, sizeof(input), stdin) != NULL) {
-            // Remove newline character
-            input[strcspn(input, "\n")] = '\0';
+        while (!validInput) {
+            printf("CMS: Do you want to input data for the new column '%s'? (y/n): ", colName);
             
-            if (input[0] == 'y' || input[0] == 'Y') {
-                input_new_column_data(colName, colType, *num_custom_cols - 1);
-                validInput = 1;
-            } 
-            else if (input[0] == 'n' || input[0] == 'N') {
-                printf("CMS: No data will be added to records for column '%s'.\n", colName);
-                validInput = 1;
-            }
-            else {
-                printf("CMS: Invalid input. Please enter 'y' for yes or 'n' for no.\n");
+            if (fgets(input, sizeof(input), stdin) != NULL) {
+                // Remove newline character
+                input[strcspn(input, "\n")] = '\0';
+                
+                if (input[0] == 'y' || input[0] == 'Y') {
+                    input_new_column_data(colName, colType, *num_custom_cols - 1);
+                    validInput = 1;
+                } 
+                else if (input[0] == 'n' || input[0] == 'N') {
+                    printf("CMS: No data will be added to records for column '%s'.\n", colName);
+                    validInput = 1;
+                }
+                else {
+                    printf("CMS: Invalid input. Please enter 'y' for yes or 'n' for no.\n");
+                }
             }
         }
     }
-}
 }
 
 //Check column name
