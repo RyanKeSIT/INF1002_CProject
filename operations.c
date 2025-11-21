@@ -427,13 +427,15 @@ void update_operation(StudentRecords *s, int recordCount, char *command) {
 /*----------------------------------------------------------------
 To delete the record with a given student ID.
 -----------------------------------------------------------------*/
-void delete_operation(const char *command) {
+void delete_operation(char *command) {
   // Verify if the database is loaded
   if (!databaseLoaded) {
     printf("CMS: Database is not loaded. Please load the database first.\n");
     return;
   }
 
+  //   Force to uppercase
+  toUpperCase(command);
   int targetedStudentID;
   char targetedStudentIDStr[20];
   // Get the student ID record to delete
@@ -482,9 +484,12 @@ void delete_operation(const char *command) {
         printf("CMS: The deletion is cancelled.\n");
         // Return to main function
         return;
+      } else {
+        // Invalid input
+        printf("CMS: The confirmation command was invalid. Aborting to ensure "
+               "data integrity.\n");
+        return;
       }
-
-      return;
     }
 
     // Check if list is exhausted
