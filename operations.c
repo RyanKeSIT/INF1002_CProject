@@ -103,10 +103,10 @@ void open_operation(const char *filename)
             continue;
         }
 
-        int id;                  // Variable to store the ID
-        char name[50];           // Variable to store the name
-        char programme[50];      // Variable to store the programme name
-        float mark;              // Variable to store the mark
+        int id; // Variable to store the ID
+        char name[50]; // Variable to store the name
+        char programme[50]; // Variable to store the programme name
+        float mark; // Variable to store the mark
 
         
         int matched = sscanf(line, "%d %49[^\t] %49[^\t] %f", &id, name, programme, &mark);
@@ -118,6 +118,58 @@ void open_operation(const char *filename)
             strncpy(records[recordCount].Name, name, sizeof(records[recordCount].Name) - 1);
             strncpy(records[recordCount].Programme, programme, sizeof(records[recordCount].Programme) - 1);
             records[recordCount].Mark = mark;
+            
+            // Read custom column data if they exist
+            char *current_pos = line;
+            
+            // Skip the default columns to get to custom columns
+            for (int i = 0; i < 4; i++) {
+                current_pos = strchr(current_pos, '\t');
+                if (current_pos) current_pos++;
+            }
+            
+            // Read custom column data
+            for (int j = 0; j < num_custom_cols && current_pos; j++) {
+                // Find the next tab or newline
+                char *next_tab = strchr(current_pos, '\t');
+                char *newline = strchr(current_pos, '\n');
+                
+                // Determine the end of this field
+                char *field_end = next_tab;
+                if (!field_end || (newline && newline < field_end)) {
+                    field_end = newline;
+                }
+                
+                if (field_end) {
+                    int field_length = field_end - current_pos;
+                    if (field_length > 0) {
+                        char field_data[MAX_COLUMN_DATA_LENGTH];
+                        strncpy(field_data, current_pos, field_length);
+                        field_data[field_length] = '\0';
+                        
+                        // Trim whitespace
+                        char *start = field_data;
+                        char *end = field_data + strlen(field_data) - 1;
+                        while (isspace(*start)) start++;
+                        while (end > start && isspace(*end)) end--;
+                        *(end + 1) = '\0';
+                        
+                        // Store data based on column type
+                        if (strcmp(custom_column[j].type, "int") == 0) {
+                            records[recordCount].custom_column[j].int_value = atoi(start);
+                        } 
+                        else if (strcmp(custom_column[j].type, "float") == 0) {
+                            records[recordCount].custom_column[j].float_value = atof(start);
+                        } 
+                        else if (strcmp(custom_column[j].type, "string") == 0) {
+                            strncpy(records[recordCount].custom_column[j].string_value, start, sizeof(records[recordCount].custom_column[j].string_value) - 1);
+                            records[recordCount].custom_column[j].string_value[sizeof(records[recordCount].custom_column[j].string_value) - 1] = '\0';
+                        }
+                    }
+                    
+                    current_pos = next_tab ? next_tab + 1 : NULL;
+                }
+            }
 
             recordCount++;
         }
@@ -134,7 +186,6 @@ void open_operation(const char *filename)
             break;
         }
     }
-
     fclose(file); 
     databaseLoaded = 1;  
     printf("CMS: The database file \"%s\" is successfully opened.\n", filename); 
@@ -167,7 +218,6 @@ void load_column_metadata(const char *filename, newColumn custom_column[], int *
     
     fclose(fptr);
 }
-
 
 /*----------------------------------------------------------------
 Function to To display all the current records in the read-in data
@@ -430,7 +480,7 @@ void save_operation(const char *filename, const StudentRecords *db, int recordCo
     if (recordCount > 1 && db != NULL){
         for (int i = 1; i < recordCount; i++) {
             // Writing default record fields
-            fprintf(fptr, "%d\t%s\t%s\t%.1f\t",db[i].ID, db[i].Name, db[i].Programme, db[i].Mark);
+            fprintf(fptr, "%d\t%s\t%s\t%.1f",db[i].ID, db[i].Name, db[i].Programme, db[i].Mark);
             
             // Save custom data according to their types
             for (int j = 0; j < num_custom_cols; j++) {
@@ -488,7 +538,6 @@ void sort_operation(void){
     char input[100];
     char field[20];
     char order[20];
-    int count;
 
     int c;
     while ((c = getchar()) != '\n' && c != EOF){}
@@ -527,24 +576,24 @@ void sort_operation(void){
     if (strcmp(field, "id") == 0 && strcmp(order, "asc") == 0)
     {
         // sort by ID (Ascending)
-        qsort(db, count, sizeof(StudentRecords), compIDAscend);
+        qsort(db, recordCount - 1, sizeof(StudentRecords), compIDAscend);
     }
     else if (strcmp(field, "id") == 0 && strcmp(order, "desc") == 0)
     {
         // sort by ID (Descending)
-        qsort(db, count, sizeof(StudentRecords), compIDDescend);
+        qsort(db, recordCount - 1, sizeof(StudentRecords), compIDDescend);
     }
     else if ((strcmp(field, "marks") == 0 || strcmp(field, "mark") == 0) &&
              strcmp(order, "asc") == 0)
     {
         // sort by Marks (Ascending)
-        qsort(db, count, sizeof(StudentRecords), compMarksAscend);
+        qsort(db, recordCount - 1, sizeof(StudentRecords), compMarksAscend);
     }
     else if ((strcmp(field, "marks") == 0 || strcmp(field, "mark") == 0) &&
              strcmp(order, "desc") == 0)
     {
         // sort by Marks (Descending)
-        qsort(db, count, sizeof(StudentRecords), compMarksDescend);
+        qsort(db, recordCount - 1, sizeof(StudentRecords), compMarksDescend);
     }
     else
     {
@@ -700,6 +749,34 @@ void add_column_operation(const char* command, newColumn custom_column[], int *n
     (*num_custom_cols)++; // Increment the counter for number of columns 
 
     printf("CMS: Successfully added new column: Name='%s', Type='%s', Length='%d'.\n", colName, colType, colLength);
+    // Ask user if they want to input data for existing records
+    if (databaseLoaded && recordCount > 1) {
+    char input[10];
+    int validInput = 0;
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+    
+    while (!validInput) {
+        printf("CMS: Do you want to input data for the new column '%s'? (y/n): ", colName);
+        
+        if (fgets(input, sizeof(input), stdin) != NULL) {
+            // Remove newline character
+            input[strcspn(input, "\n")] = '\0';
+            
+            if (input[0] == 'y' || input[0] == 'Y') {
+                input_new_column_data(colName, colType, *num_custom_cols - 1);
+                validInput = 1;
+            } 
+            else if (input[0] == 'n' || input[0] == 'N') {
+                printf("CMS: No data will be added to records for column '%s'.\n", colName);
+                validInput = 1;
+            }
+            else {
+                printf("CMS: Invalid input. Please enter 'y' for yes or 'n' for no.\n");
+            }
+        }
+    }
+}
 }
 
 //Check column name
@@ -729,4 +806,60 @@ int isValidColumnType(const char *colType) {
         }
     }
     return 0; // Invalid type
+}
+
+//Input data for newly added column in existing records
+void input_new_column_data(const char *colName, const char *colType, int colIndex) {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+    printf("CMS: Input data for column '%s' (type: %s) in existing records:\n", colName, colType);
+    printf("CMS: Enter to leave record blank.\n");
+
+    for (int i = 1; i < recordCount; i++) { 
+        printf("Entering %s Record for ID %d: ", colName, records[i].ID);
+        
+        char input[100];
+        if (fgets(input, sizeof(input), stdin) != NULL) {
+            // Remove newline character
+            input[strcspn(input, "\n")] = '\0';
+            
+            // Skip this record if user does not enter anything
+            if (strlen(input) == 0) {
+                printf("CMS: Skipped record %d.\n\n", records[i].ID);
+                
+                // Set default value based on type
+                if (strcmp(colType, "int") == 0) {
+                    records[i].custom_column[colIndex].int_value = 0;
+                } else if (strcmp(colType, "float") == 0) {
+                    records[i].custom_column[colIndex].float_value = 0.0f;
+                } else if (strcmp(colType, "string") == 0) {
+                    strcpy(records[i].custom_column[colIndex].string_value, "");
+                }
+                continue;
+            }
+            
+            // Process input based on column type
+            if (strcmp(colType, "int") == 0) {
+                int value = atoi(input);
+                records[i].custom_column[colIndex].int_value = value;
+                printf("CMS: Set %s = %d for record %d.\n\n", colName, value, records[i].ID);
+                
+            } else if (strcmp(colType, "float") == 0) {
+                float value = atof(input);
+                records[i].custom_column[colIndex].float_value = value;
+                printf("CMS: Set %s = %.2f for record %d.\n\n", colName, value, records[i].ID);
+                
+            } else if (strcmp(colType, "string") == 0) {
+                // Validate string length
+                if (strlen(input) > MAX_COLUMN_DATA_LENGTH - 1) {
+                    printf("CMS: Warning: Input too long. Truncated to %d characters.\n", MAX_COLUMN_DATA_LENGTH - 1);
+                }
+                strncpy(records[i].custom_column[colIndex].string_value, input, MAX_COLUMN_DATA_LENGTH - 1);
+                records[i].custom_column[colIndex].string_value[MAX_COLUMN_DATA_LENGTH - 1] = '\0';
+                printf("CMS: Set %s = '%s' for record %d.\n\n", colName, records[i].custom_column[colIndex].string_value, records[i].ID);
+            }
+        }
+    }
+    
+    printf("CMS: Successfully input data for column '%s'.\n", colName);
 }
