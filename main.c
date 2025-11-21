@@ -4,11 +4,26 @@
 #include <string.h>
 #include "cms.h"
 #include "operations.c"
-#include <stdio.h>
 
 int main(){
     db = records; //point to records array in cms.h
-
+    printf("\nDeclaration\n");
+    printf("SIT\'s policy on copying does not allow the students to copy source code as well as assessment solutions from another person AI or other places. It is the student responsibility to guarantee that their assessment solutions are their own work. Meanwhile, the students must also ensure that their work is not accessible by others. Where such plagiarism is detected, both of the assessments involved will receive ZERO mark.\n");
+    printf("We hereby declare that:\n");
+    printf("• We fully understand and agree to the above mentioned plagiarism policy.\n");
+    printf("• We did not copy any code from others or from other places.\n");
+    printf("• We did not share our codes with others or upload to any other places for public access and will not do that in the future.\n");
+    printf("• We agree that our project will receive Zero mark if there is any plagiarism detected.\n");
+    printf("• We agree that we will not disclose any information or material of the group project to others or upload to any other places for public access.\n");
+    printf("• We agree that we did not copy any code directly from AI generated sources\n");
+    printf("Declared by: P3-4\n");
+    printf("Team members:\n");
+    printf("1. Lau Ning Xuan\n");
+    printf("2. Low Dong Han\n");
+    printf("3. Ke Zhijie Ryan\n");
+    printf("4. Ang Hung Ling\n");
+    printf("5. Muhammad Irfan Bin Md Rosdi\n");
+    printf("Date: 25 November 2025 (Tuesday)\n\n");
     //Loop main menu until user input "EXIT"
     do {    
         printf("==================================\n");
@@ -48,7 +63,7 @@ int main(){
         }
         else if (strncmp(commandPrefix, "QUERY", 5) == 0){
             // Search if there is any existing record with a given student ID
-            query_operation();
+            query_operation(command);
         }
         else if (strncmp(commandPrefix, "UPDATE", 6) == 0){
             // Update the data for a record with a given student ID
@@ -67,6 +82,10 @@ int main(){
                 // Save all the current records into the database file
                 save_operation(DB_FILENAME, db, recordCount, custom_column, num_custom_cols);
             }
+        }
+        else if (strcmp(commandPrefix, "SORT") == 0) {
+            // Show summary of Total number of students, Average mark, Highest and lowest mark
+            sort_operation();
         }
         else if (strcmp(commandPrefix, "SUMMARY") == 0) {
             // Show summary of Total number of students, Average mark, Highest and lowest mark
