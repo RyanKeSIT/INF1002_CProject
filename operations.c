@@ -513,19 +513,19 @@ void insert_operation(const char* command)
         }
         // Store by type
         if (strcmp(custom_column[j].type, "int") == 0) {
-            int v;
-            if (sscanf(valueBuffer, "%d", &v) != 1) {
+            int intValue;
+            if (sscanf(valueBuffer, "%d", &intValue) != 1) {
                 printf("CMS: Invalid value '%s' for column %s (expected int).\n", valueBuffer, custom_column[j].name);
                 return;
             }
-            records[recordCount].custom_column[j].int_value = v;
+            records[recordCount].custom_column[j].int_value = intValue;
         } else if (strcmp(custom_column[j].type, "float") == 0) {
-            float fv;
-            if (sscanf(valueBuffer, "%f", &fv) != 1) {
+            float floatValue;
+            if (sscanf(valueBuffer, "%f", &floatValue) != 1) {
                 printf("CMS: Invalid value '%s' for column %s (expected float).\n",valueBuffer, custom_column[j].name);
                 return;
             }
-            records[recordCount].custom_column[j].float_value = fv;
+            records[recordCount].custom_column[j].float_value = floatValue;
         } else if (strcmp(custom_column[j].type, "string") == 0) {
             strncpy(records[recordCount].custom_column[j].string_value,valueBuffer, MAX_COLUMN_DATA_LENGTH - 1);
             records[recordCount].custom_column[j].string_value[MAX_COLUMN_DATA_LENGTH - 1] = '\0';
