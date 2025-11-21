@@ -5,8 +5,9 @@
  Define Constants
 ----------------*/
 #define DB_FILENAME "P3_4-CMS.txt" // Default filename
+#define META_FILENAME "customcolumn.meta" //Meta file name of custom column
 
-#define MAX_ID_LENGTH 9 //Max length of ID
+#define MAX_ID_LENGTH 9 //Max length of ID 
 #define MAX_LENGTH_NAME 15 // Max length of student name
 #define MAX_PROGRAMME_NAME 25 //Max length of programme name
 #define MAX_MARK_LENGTH 6 //Max length of mark
@@ -60,10 +61,9 @@ char tableName[50]; // Variable to store table name from database
 char command[200]; // Buffer to store user input commands
 char filename[] = DB_FILENAME; // Variable for the database filename
 int num_custom_cols = 0; // Number of custom columns added
-#define META_FILENAME "customercolumn.meta" //Meta file name of custom column
 
-const char *DEFAULT_COLUMN_NAMES[NUM_DEFAULT_COLS] = {"ID", "Name", "Programme", "Mark"};
-const char *VALID_COLUMN_TYPES[NUM_COLUMN_TYPES] = {"int", "float", "string"};
+const char *default_column_names[NUM_DEFAULT_COLS] = {"ID", "Name", "Programme", "Mark"};
+const char *valid_column_types[NUM_COLUMN_TYPES] = {"int", "float", "string"};
 
 /*---------------------
  Core Function Prototypes

@@ -4,6 +4,7 @@
 #include <string.h>
 #include "cms.h"
 #include "operations.c"
+#include <stdio.h>
 
 int main(){
     db = records; //point to records array in cms.h
@@ -34,24 +35,27 @@ int main(){
 
         // Verify the command entered by the user
         if (strcmp(commandPrefix, "OPEN") == 0){
-            // Open the database file
+            // Open the database file and read in all the record
             open_operation(filename);
         }
         else if (strcmp(commandPrefix, "SHOW") == 0){
-            // Show all records in the database
+            // Display all the current records in the database
             showall_operation();
         }
         else if (strcmp(commandPrefix, "INSERT" ) == 0){
-            // Call the insert function
+            // Insert a new data record.
             insert_operation(command);
         }
         else if (strncmp(commandPrefix, "QUERY", 5) == 0){
+            // Search if there is any existing record with a given student ID
             query_operation();
         }
         else if (strncmp(commandPrefix, "UPDATE", 6) == 0){
+            // Update the data for a record with a given student ID
             update_operation();
         }
         else if (strcmp(commandPrefix, "DELETE") == 0){
+            //  Delete the record with a given student ID
             delete_operation();
         }
         else if (strcmp(commandPrefix, "SAVE") == 0){
@@ -60,10 +64,16 @@ int main(){
                 printf("CMS: Database is not loaded. Please open the database first.\n");
             } 
             else {
+                // Save all the current records into the database file
                 save_operation(DB_FILENAME, db, recordCount, custom_column, num_custom_cols);
             }
         }
+        else if (strcmp(commandPrefix, "SUMMARY") == 0) {
+            // Show summary of Total number of students, Average mark, Highest and lowest mark
+            summary_statics_operation();
+        }
         else if (strcmp(commandPrefix, "ADD") == 0){
+            // Add new columns
             add_column_operation(command, custom_column, &num_custom_cols);
         }
         else if (strcmp(commandPrefix, "EXIT") == 0){
