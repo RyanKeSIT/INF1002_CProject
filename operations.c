@@ -455,41 +455,36 @@ void delete_operation(char *command) {
   }
 
   // Get to the row of the student ID to delete
-  for (int i = 0; i < recordCount; i++) {
+  for (int i = 1; i < recordCount; i++) {
     // Check if student ID is found
     if (records[i].ID == targetedStudentID) {
-      char confirmationInput;
-      printf(
-          "CMS: Are you sure you want to delete record with ID=%d? Type \"Y\" "
-          "to Confirm or type \"N\" to cancel.\n",
-          targetedStudentID);
+      char confirmationInput[10];
+      printf("CMS: Are you sure you want to delete record with ID=%d? Type "
+             "\"Y\" "
+             "to Confirm or type \"N\" to cancel.\n",
+             targetedStudentID);
       printf("P3_4: ");
       // Get the confirmation input
-      scanf("%s", &confirmationInput);
+      scanf("%s", confirmationInput);
 
       //   stricmp() accepts arbitrary alphabet case
-      if (_stricmp(&confirmationInput, "Y") == 0) {
+      if (_stricmp(confirmationInput, "Y") == 0) {
         // Delete the record
-        splice(records, recordCount, i);
-        //   Decrement the student count
-        recordCount = recordCount - 1;
+        splice(records, &recordCount, i);
 
         // Print success action
         printf("CMS: The record with ID=%d is successfully deleted.\n",
                targetedStudentID);
-
-        //    Return to main function
-        return;
-      } else if (_stricmp(&confirmationInput, "N") == 0) {
+      } else if (_stricmp(confirmationInput, "N") == 0) {
         printf("CMS: The deletion is cancelled.\n");
-        // Return to main function
-        return;
       } else {
         // Invalid input
         printf("CMS: The confirmation command was invalid. Aborting to ensure "
                "data integrity.\n");
-        return;
       }
+
+      // Return to main function
+      return;
     }
 
     // Check if list is exhausted
