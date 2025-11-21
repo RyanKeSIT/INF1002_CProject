@@ -418,108 +418,146 @@ void update_operation(char *command) {
     return;
   }
 
+  //   Check if record exist in database
+  int recordIndex = -1;
+  for (int i = 0; i < recordCount; i++) {
+    if (records[i].ID == targetedStudentID) {
+      recordIndex = i;
+      break;
+    }
+  }
+  //   Record does not exist in database
+  if (recordIndex == -1) {
+    printf("CMS: The record with ID=%d does not exist.\n", targetedStudentID);
+    return;
+  }
+
   //   Check potentially multiple key-value pairs
-  char commandCopy[256];
-  strcpy(commandCopy, command);
-  char *token = strtok(commandCopy, " "); // Split by spaces
-  token = strtok(NULL, " ");              // Skip "UPDATE"
-  token = strtok(NULL, " ");              // Skip "ID=xxxxxxx"
-  //   Parse by (potentially) multiple key-value pairs
-  while (token != NULL) {
+  char *ptr = strstr(command, "ID=");
+  if (ptr == NULL)
+    return;
+  //   Check if columns were supplied at all
+  ptr = strchr(ptr, ' ');
+  if (ptr == NULL) {
+    printf("CMS: There were no columns supplied to update.\n");
+    return;
+  }
+
+  while (ptr != NULL && *ptr != '\0') {
+    // Skip whitespace between key-value pairs
+    while (*ptr == ' ')
+      ptr++;
+    if (*ptr == '\0')
+      break; // Break at EOL
+
     char targetedField[20];
     char targetedValue[100];
 
-    if (sscanf(token, "%[^=]=%s", targetedField, targetedValue) == 2) {
-      // Get to the row of the student ID to edit
-      for (int i = 0; i < recordCount; i++) {
-        // Check if student ID is found
-        if (records[i].ID == targetedStudentID) {
-          // Update the struct field based on supplied key
-          if (_stricmp(targetedField, "Name") == 0) {
-            strncpy(records[i].Name, targetedValue, sizeof records[i].Name - 1);
-            printf("CMS: The record with ID=%d is successfully updated, with "
-                   "%s as %s\n",
-                   targetedStudentID, targetedField, targetedValue);
-          } else if (_stricmp(targetedField, "Programme") == 0) {
-            strncpy(records[i].Programme, targetedValue,
-                    sizeof records[i].Programme - 1);
-            printf("CMS: The record with ID=%d is successfully updated, with "
-                   "%s as %s\n",
-                   targetedStudentID, targetedField, targetedValue);
-          } else if (_stricmp(targetedField, "Mark") == 0) {
-            records[i].Mark = atof(targetedValue);
-            printf("CMS: The record with ID=%d is successfully updated, with "
-                   "%s as %f\n",
-                   targetedStudentID, targetedField, atof(targetedValue));
-          } else {
-            // Custom columns
-            // Check if it's a custom column
-            int customColIndex = -1;
+    // Extract (potentially) multiple keys
+    char *es = strchr(ptr, '=');
+    if (es == NULL)
+      break; // Signal EOL
 
-            // Search for the custom column by name
-            for (int j = 0; j < num_custom_cols; j++) {
-              if (_stricmp(targetedField, custom_column[j].name) == 0) {
-                customColIndex = j;
-                break;
-              }
-            }
+    int keyLength = es - ptr;               // Get length of key pair
+    strncpy(targetedField, ptr, keyLength); // copy the key pair to target field
+    targetedField[keyLength] = '\0';
 
-            // If custom column found, update it based on its type
-            if (customColIndex != -1) {
-              // Update based on the column's data type
-              if (strcmp(custom_column[customColIndex].type, "int") == 0) {
-                records[i].custom_column[customColIndex].int_value =
-                    atoi(targetedValue);
-                printf("CMS: The record with ID=%d is successfully updated, "
-                       "with %s as %d\n",
-                       targetedStudentID, targetedField, atoi(targetedValue));
-              } else if (strcmp(custom_column[customColIndex].type, "float") ==
-                         0) {
-                records[i].custom_column[customColIndex].float_value =
-                    atof(targetedValue);
-                printf("CMS: The record with ID=%d is successfully updated, "
-                       "with %s as %f\n",
-                       targetedStudentID, targetedField, atof(targetedValue));
-              } else if (strcmp(custom_column[customColIndex].type, "string") ==
-                         0) {
-                strncpy(records[i].custom_column[customColIndex].string_value,
-                        targetedValue, MAX_COLUMN_DATA_LENGTH - 1);
-                printf("CMS: The record with ID=%d is successfully updated, "
-                       "with %s as %s\n",
-                       targetedStudentID, targetedField, targetedValue);
-              }
-            } else {
-              // Column name not found in default or custom columns
-              printf("CMS: Column '%s' does not exist.\n", targetedField);
-            }
-          }
+    // Move past '=' sign, to value
+    ptr = es + 1;
 
-          //    Return to main function
-          return;
-        }
-
-        // Check if list is exhausted
-        if (i == recordCount - 1) {
-          printf("CMS: The record with ID=%d does not exist.\n",
-                 targetedStudentID);
-
-          // Return to main function. If there are no records, no point looking
-          // into other fields
-          return;
-        }
+    // Check if value is quoted (here we NEED to use quote for multi-space
+    // names)
+    if (*ptr == '"') {
+      // Start of multi-space name
+      ptr++; // Skip opening quote
+      char *closingQuote = strchr(ptr, '"');
+      if (closingQuote == NULL) {
+        printf("CMS: Missing closing quote for %s\n", targetedField);
+        return;
       }
+
+      int valueLen = closingQuote - ptr;     // Get length of value pair
+      strncpy(targetedValue, ptr, valueLen); // copy value pair to target field
+      targetedValue[valueLen] = '\0';
+
+      ptr = closingQuote + 1; // Move past closing quote
+    } else {
+      // For unquoted value (read until space or end) [i.e. Name="John Foo]
+      int valueLen = 0;
+      while (ptr[valueLen] != ' ' && ptr[valueLen] != '\0') {
+        valueLen++;
+      }
+      strncpy(targetedValue, ptr, valueLen);
+      targetedValue[valueLen] = '\0';
+
+      ptr += valueLen;
     }
 
-    // Pop the current token
-    token = strtok(NULL, " ");
-  }
+    // Update the struct field based on supplied key (record was found earlier)
+    if (_stricmp(targetedField, "Name") == 0) {
+      strncpy(records[recordIndex].Name, targetedValue,
+              sizeof(records[recordIndex].Name) - 1);
+      records[recordIndex].Name[sizeof(records[recordIndex].Name) - 1] = '\0';
+      printf("CMS: The record with ID=%d is successfully updated, with %s "
+             "as %s\n",
+             targetedStudentID, targetedField, targetedValue);
+    } else if (_stricmp(targetedField, "Programme") == 0) {
+      strncpy(records[recordIndex].Programme, targetedValue,
+              sizeof(records[recordIndex].Programme) - 1);
+      records[recordIndex]
+          .Programme[sizeof(records[recordIndex].Programme) - 1] = '\0';
+      printf("CMS: The record with ID=%d is successfully updated, with %s "
+             "as %s\n",
+             targetedStudentID, targetedField, targetedValue);
+    } else if (_stricmp(targetedField, "Mark") == 0) {
+      records[recordIndex].Mark = atof(targetedValue);
+      printf("CMS: The record with ID=%d is successfully updated, with %s "
+             "as %f\n",
+             targetedStudentID, targetedField, records[recordIndex].Mark);
+    } else {
+      // Check if it is a custom column
+      int customColIndex = -1;
 
-  //   Check if there were no key-value pairs to begin with
-  if (token == NULL) {
-    printf("CMS: There were no columns supplied to update.\n");
+      // Search for the custom column by name
+      for (int j = 0; j < num_custom_cols; j++) {
+        if (_stricmp(targetedField, custom_column[j].name) == 0) {
+          customColIndex = j;
+          break;
+        }
+      }
 
-    //    Return to main function
-    return;
+      // If custom column found, update it based on its datatype
+      if (customColIndex != -1) {
+        if (strcmp(custom_column[customColIndex].type, "int") == 0) {
+          records[recordIndex].custom_column[customColIndex].int_value =
+              atoi(targetedValue);
+          printf("CMS: The record with ID=%d is successfully updated, with "
+                 "%s as %d\n",
+                 targetedStudentID, targetedField,
+                 records[recordIndex].custom_column[customColIndex].int_value);
+        } else if (strcmp(custom_column[customColIndex].type, "float") == 0) {
+          records[recordIndex].custom_column[customColIndex].float_value =
+              atof(targetedValue);
+          printf(
+              "CMS: The record with ID=%d is successfully updated, with "
+              "%s as %f\n",
+              targetedStudentID, targetedField,
+              records[recordIndex].custom_column[customColIndex].float_value);
+        } else if (strcmp(custom_column[customColIndex].type, "string") == 0) {
+          strncpy(
+              records[recordIndex].custom_column[customColIndex].string_value,
+              targetedValue, MAX_COLUMN_DATA_LENGTH - 1);
+          records[recordIndex]
+              .custom_column[customColIndex]
+              .string_value[MAX_COLUMN_DATA_LENGTH - 1] = '\0';
+          printf("CMS: The record with ID=%d is successfully updated, with "
+                 "%s as %s\n",
+                 targetedStudentID, targetedField, targetedValue);
+        }
+      } else {
+        printf("CMS: Column '%s' does not exist.\n", targetedField);
+      }
+    }
   }
 }
 
