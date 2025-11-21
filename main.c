@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
 #include "cms.h"
 #include "operations.c"
@@ -56,7 +54,7 @@ int main(){
         }
         else if (strcmp(commandPrefix, "DELETE") == 0){
             //  Delete the record with a given student ID
-            delete_operation();
+            delete_operation(command);
         }
         else if (strcmp(commandPrefix, "SAVE") == 0){
             //Only save when file is opened

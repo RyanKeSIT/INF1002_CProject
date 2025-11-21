@@ -1,4 +1,6 @@
 #include "./tools/splice.c"
+#include "cms.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -425,43 +427,68 @@ void update_operation(StudentRecords *s, int recordCount, char *command) {
 /*----------------------------------------------------------------
 To delete the record with a given student ID.
 -----------------------------------------------------------------*/
-void delete_operation(StudentRecords *s, int recordCount, char *command) {
+void delete_operation(const char *command) {
+  // Verify if the database is loaded
+  if (!databaseLoaded) {
+    printf("CMS: Database is not loaded. Please load the database first.\n");
+    return;
+  }
+
   int targetedStudentID;
+  char targetedStudentIDStr[20];
   // Get the student ID record to delete
-  sscanf(command, "DELETE ID=%d", &targetedStudentID);
+  if (sscanf(command, "DELETE ID=%d", &targetedStudentID) != 1) {
+    // If the command does not contain a valid ID, display an error
+    printf("CMS: The record deletion contains an invalid command. Please try "
+           "again.\n");
+    return;
+  }
+  //   Check valid length of ID
+  sprintf(targetedStudentIDStr, "%d", targetedStudentID);
+  int targetedStudentIDLength = strlen(targetedStudentIDStr);
+  if (targetedStudentIDLength != 7) {
+    // If the ID is not exactly 7 digits, display an error
+    printf("CMS: Student ID must be exactly 7 digits.\n");
+    return;
+  }
 
   // Get to the row of the student ID to delete
   for (int i = 0; i < recordCount; i++) {
     // Check if student ID is found
-    if (s[i].ID == targetedStudentID) {
+    if (records[i].ID == targetedStudentID) {
       char confirmationInput;
       printf(
           "CMS: Are you sure you want to delete record with ID=%d? Type \"Y\" "
           "to Confirm or type \"N\" to cancel.\n",
           targetedStudentID);
       printf("P3_4: ");
-      // Get the confirmation input and force to upper case
+      // Get the confirmation input
       scanf("%s", &confirmationInput);
 
+      //   stricmp() accepts arbitrary alphabet case
       if (_stricmp(&confirmationInput, "Y") == 0) {
         // Delete the record
-        splice(s, &recordCount, i);
+        splice(records, recordCount, i);
+        //   Decrement the student count
+        recordCount = recordCount - 1;
 
         // Print success action
-        printf("CMS: The record with ID=%d is successfully deleted.",
+        printf("CMS: The record with ID=%d is successfully deleted.\n",
                targetedStudentID);
+
+        //    Return to main function
+        return;
       } else if (_stricmp(&confirmationInput, "N") == 0) {
         printf("CMS: The deletion is cancelled.\n");
-        // Retry this whole function again
+        // Return to main function
+        return;
       }
 
-      //   Decrement the student count
-      recordCount = recordCount - 1;
       return;
     }
 
     // Check if list is exhausted
-    else if (i == recordCount - 1) {
+    if (i == recordCount - 1) {
       printf("CMS: The record with ID=%d does not exist.\n", targetedStudentID);
     }
   }
