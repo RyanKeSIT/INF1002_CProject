@@ -4,6 +4,7 @@
 #include <string.h>
 #include "cms.h"
 #include "operations.c"
+#include <stdio.h>
 
 int main(){
     db = records; //point to records array in cms.h

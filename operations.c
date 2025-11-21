@@ -1,7 +1,7 @@
+#include "./tools/splice.c"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "cms.h"
 
 /*-------------------------------------------------
 Convert user input for operation choice to uppercase
