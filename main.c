@@ -4,6 +4,7 @@
 #include <string.h>
 #include "cms.h"
 #include "operations.c"
+#include <stdio.h>
 
 int main(){
     db = records; //point to records array in cms.h
@@ -26,7 +27,7 @@ int main(){
     printf("Date: 25 November 2025 (Tuesday)\n\n");
     //Loop main menu until user input "EXIT"
     do {    
-        printf("==================================\n");
+        printf("\n==================================\n");
         printf("Class Management System (CMS) Menu\n");
         printf("==================================\n");
         printf("  OPEN                              - Open the database file & read in all the records\n");
@@ -39,7 +40,7 @@ int main(){
         printf("  SORT                              - Sort the records\n");
         printf("  UNIQUE                            - Unique Feature\n");
         printf("  EXIT                              - Exit the program\n");
-        printf("Please Select an Operation to Perform: ");
+        printf("Please Select an Operation to Perform:");
         printf("\nP3_4: ");
         scanf(" %[^\n]", command); // Read user input until newline
 
