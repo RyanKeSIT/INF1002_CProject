@@ -33,7 +33,7 @@ typedef union {
 typedef struct {
     char name[MAX_CUSTOM_COL_NAME]; //new column name
     char type[MAX_CUSTOM_COL_NAME]; // new column data type
-    int length // new column data type
+    int length; // new column data type
 } newColumn;
 newColumn custom_column[MAX_CUSTOM_COLUMN_NO]; // Array to store all the new columns
 
