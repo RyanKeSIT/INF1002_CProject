@@ -92,7 +92,7 @@ void open_operation(const char *filename)
     strncpy(records[0].Programme, "Programme", sizeof(records[0].Programme) - 1); // Set "Programme" header
     records[0].Mark = 0.0f;  // Set "Mark" header
 
-    recordCount = 1;  // Start counting number of student records
+    //recordCount = 1;  // Start counting number of student records
 
     // Process each data line
     while (fgets(line, sizeof(line), file))
@@ -208,16 +208,19 @@ void showall_operation()
 
     // Create format strings dynamically based on the maximum lengths
     char formatHeader[100], formatRow[100];
+
     // Find max widths for each custom column
     int customWidth[MAX_CUSTOM_COLUMN_NO];
 
+
+    //Compute the maximum lengths for each custom column by checking all rows and their types (int, float, string).
     for (int c = 0; c < num_custom_cols; c++)
     {
         int maxLen = (int)strlen(custom_column[c].name);
 
         for (int i = 1; i < recordCount; i++)   // start from 1; 0 is header
         {
-            char temp[MAX_COLUMN_DATA_LENGTH];
+            char temp[MAX_COLUMN_DATA_LENGTH]; // temp buffer to hold string representation
 
             if (strcmp(custom_column[c].type, "int") == 0)
             {
@@ -235,12 +238,10 @@ void showall_operation()
             {
                 temp[0] = '\0';
             }
-
             int len = (int)strlen(temp);
             if (len > maxLen) 
             maxLen = len;
         }
-
         customWidth[c] = maxLen + 3;
     }
     // Format for header: %-8s for "ID", dynamic width for "Name" and "Programme", and default for "Mark"
@@ -441,8 +442,63 @@ int checkRecordIDExist_operation(int id)
 /*----------------------------------------------------------------
 To search if there is any existing record with a given student ID.
 -----------------------------------------------------------------*/
-void query_operation() {
+void query_operation(char *command)
+{
+    // Expected format: QUERY ID=<id>
 
+    char *id_ptr = strstr(command, "ID=");
+    if (id_ptr == NULL)
+    {
+        printf("Invalid format. Please use: QUERY ID=<id>\n");
+        return;
+    }
+
+    id_ptr += 3; // move pointer past "ID="
+
+    // Convert the ID part to a number
+    char *endptr;
+    long query_ID_value = strtol(id_ptr, &endptr, 10);
+
+    // Check validity: no digits read
+    if (endptr == id_ptr)
+    {
+        printf("Invalid ID. Please ensure only numeric digits are used.\n");
+        return;
+    }
+
+    // Check remaining characters
+    while (*endptr != '\0')
+    {
+        if (!isspace((unsigned char)*endptr))
+        {
+            printf("Invalid characters after ID. Only digits allowed.\n");
+            return;
+        }
+        endptr++;
+    }
+
+    printf("You entered ID: %ld\n", query_ID_value);
+
+    printf("\n%-10s  %-20s  %-24s  %-5s\n", "ID", "Name", "Programme", "Mark");
+    printf("---------------------------------------------------------------------\n");
+
+    int found = 0;
+
+    for (int i = 0; i < recordCount; i++)
+    {
+        if (db[i].ID == query_ID_value)
+        {
+            printf("%-10d  %-20s  %-24s  %-5.2f\n",
+                   db[i].ID, db[i].Name, db[i].Programme, db[i].Mark);
+            found = 1;
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        printf("Record not found.\n");
+    }
 }
 
 /*-----------------------------------------------------
@@ -544,8 +600,120 @@ void save_column_metafile(newColumn custom_column[], int num_custom_cols) {
 /*----------------------------------
 Implement sorting of student records 
 -----------------------------------*/
-void sort_operation(){
+void sort_operation(void)
+{
+    char input[100];
+    char field[20];
+    char order[20];
 
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF)
+    {
+    }
+
+    while (1) // <-- Loop until user enters valid sort choice
+    {
+
+        printf("Which order would you like to sort it by?\n");
+        printf("  - id asc      (Ascending Student ID)\n");
+        printf("  - id desc     (Descending Student ID)\n");
+        printf("  - marks asc   (Ascending Marks)\n");
+        printf("  - marks desc  (Descending Marks)\n");
+        printf("Please type your choice (e.g. \"id asc\"): ");
+
+        if (fgets(input, sizeof(input), stdin) == NULL)
+        {
+            printf("\nInput error.\n");
+            continue; // ask again
+        }
+
+        // remove trailing newline
+        input[strcspn(input, "\n")] = '\0';
+
+        // parse into two words: field + order
+        int scanned = sscanf(input, "%19s %19s", field, order);
+        if (scanned != 2)
+        {
+            printf("\nInvalid format. Please type something like \"id asc\" or \"marks desc\".\n");
+            continue; // ask again
+        }
+
+        // convert to lowercase for case-insensitive comparison
+        for (int i = 0; field[i]; i++)
+            field[i] = (char)tolower((unsigned char)field[i]);
+        for (int i = 0; order[i]; i++)
+            order[i] = (char)tolower((unsigned char)order[i]);
+
+        // decide which sort to use
+        if (strcmp(field, "id") == 0 && strcmp(order, "asc") == 0)
+        {
+            // sort by ID (Ascending)
+            qsort(db, recordCount - 1, sizeof(StudentRecords), compIDAscend);
+            break;
+        }
+        else if (strcmp(field, "id") == 0 && strcmp(order, "desc") == 0)
+        {
+            // sort by ID (Descending)
+            qsort(db, recordCount - 1, sizeof(StudentRecords), compIDDescend);
+            break;
+        }
+        else if ((strcmp(field, "marks") == 0 || strcmp(field, "mark") == 0) &&
+                 strcmp(order, "asc") == 0)
+        {
+            // sort by Marks (Ascending)
+            qsort(db, recordCount - 1, sizeof(StudentRecords), compMarksAscend);
+            break;
+        }
+        else if ((strcmp(field, "marks") == 0 || strcmp(field, "mark") == 0) &&
+                 strcmp(order, "desc") == 0)
+        {
+            // sort by Marks (Descending)
+            qsort(db, recordCount - 1, sizeof(StudentRecords), compMarksDescend);
+            break;
+        }
+        else
+        {
+            printf("\nInvalid choice. Examples of valid inputs:\n");
+            printf("  id asc\n");
+            printf("  id desc\n");
+            printf("  marks asc\n");
+            printf("  marks desc\n");
+            continue; // ask again
+        }
+    }
+
+    // show sorted records
+    showall_operation();
+}
+// Custom function to sort the ID (Ascending Order)
+int compIDAscend(const void *a, const void *b)
+{
+    const StudentRecords *student1 = (const StudentRecords *)a;
+    const StudentRecords *student2 = (const StudentRecords *)b;
+    return student1->ID - student2->ID;
+}
+
+int compIDDescend(const void *a, const void *b)
+{
+    const StudentRecords *student1 = (const StudentRecords *)a;
+    const StudentRecords *student2 = (const StudentRecords *)b;
+    return student2->ID - student1->ID;
+}
+
+// Custom function to sort the Marks (Ascending Order)
+int compMarksAscend(const void *a, const void *b)
+{
+    const StudentRecords *student1 = (const StudentRecords *)a;
+    const StudentRecords *student2 = (const StudentRecords *)b;
+    return student1->Mark - student2->Mark;
+}
+
+// Custom function to sort the Marks (Descending Order)
+int compMarksDescend(const void *a, const void *b)
+{
+    const StudentRecords *student1 = (const StudentRecords *)a;
+    const StudentRecords *student2 = (const StudentRecords *)b;
+    return student2->Mark - student1->Mark;
 }
 
 /*------------------------
@@ -557,28 +725,27 @@ void summary_statics_operation() {
         return;
     }
 
-    if (recordCount <= 1) { // Only header exists
+    if (recordCount <= 0) { // Only header exists
         printf("CMS: No student records available.\n");
         return;
     }
 
-    int totalStudents = recordCount - 1;   // recordCount is total lines including header, -1 excludes header and get actual students 
-    float sum = 0.0f;
+    int totalStudents = recordCount; // recordCount is total lines including header, -1 excludes header and get actual students
+    float sum = 0.0f; //sum of all marks, to calculate average
 
     // Initialize using first student
     float highest = records[1].Mark;
     float lowest = records[1].Mark;
 
+    // store indices of students who have the highest and lowest scores
     int highestScoreIndex[MAX_RECORDS];
     int lowestScoreIndex[MAX_RECORDS];
-
+    
+    // track how many students share the highest and lowest scores
     int highestCount = 0;
     int lowestCount = 0;
 
-    highestScoreIndex[highestCount++] = 1;
-    lowestScoreIndex[lowestCount++] = 1;
-
-    for (int i = 1; i < recordCount; i++) {
+    for (int i = 0; i < recordCount; i++) {
         float mark = records[i].Mark;
         sum += mark;
 
@@ -607,10 +774,10 @@ void summary_statics_operation() {
     printf("Total number of students : %d\n", totalStudents);
     printf("Average mark            : %.2f\n", avg);
 
-    printf("Highest mark            : %.1f (", highest);
-    for(int i = 0; i < highestCount; i++) {
-        printf("%s", records[highestScoreIndex[i]].Name);
-        if (i < highestCount - 1) {
+    printf("Highest mark            : %.1f (", highest); 
+    for(int i = 0; i < highestCount; i++) { // loop through all students with highest mark
+        printf("%s", records[highestScoreIndex[i]].Name); 
+        if (i < highestCount - 1) { // if not the last student, print comma and space to separate names
             printf(", ");
         }
     }

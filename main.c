@@ -22,6 +22,7 @@ int main(){
         printf("  DELETE ID=<id>                    - Delete a record by ID\n");
         printf("  SAVE                              - Save the database file\n");
         printf("  SORT                              - Sort the records\n");
+        printf("  SUMMARY                           - Summary of the records\n");
         printf("  UNIQUE                            - Unique Feature\n");
         printf("  EXIT                              - Exit the program\n");
         printf("Please Select an Operation to Perform: ");
@@ -48,7 +49,7 @@ int main(){
         }
         else if (strncmp(commandPrefix, "QUERY", 5) == 0){
             // Search if there is any existing record with a given student ID
-            query_operation();
+            query_operation(command);
         }
         else if (strncmp(commandPrefix, "UPDATE", 6) == 0){
             // Update the data for a record with a given student ID
@@ -67,6 +68,10 @@ int main(){
                 // Save all the current records into the database file
                 save_operation(DB_FILENAME, db, recordCount, custom_column, num_custom_cols);
             }
+        }
+        else if (strcmp(commandPrefix, "SORT") == 0) {
+            // Show summary of Total number of students, Average mark, Highest and lowest mark
+            sort_operation();
         }
         else if (strcmp(commandPrefix, "SUMMARY") == 0) {
             // Show summary of Total number of students, Average mark, Highest and lowest mark

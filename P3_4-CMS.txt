@@ -2,11 +2,8 @@ Database Name: CMS
 Authors: Assistant Prof Oran Zane Devilly
 
 Table Name: StudentRecords
-ID	Name		Programme		Mark		Hobby
-2301234	Joshua Chen	Software Engineering	70.5		
-2201234	Isaac Teo	Computer Science	63.4		
-2304567	John Levoy	Digital Supply Chain	85.9		
-2304568	Michy	IS	74.3		
-2306789	Jake	SE	85.9		
-2401234	Lemon	IS	63.4		
-2406789	Orange	DSC	85.9		
+ID	Name		Programme		Mark
+2301234	Joshua Chen	Software Engineering	70.5
+2201234	Isaac Teo	Computer Science	    63.4		
+2304567	John Levoy	Digital Supply Chain	85.9
+2304568	Jason Tan	Digital Supply Chain	85.9	
