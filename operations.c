@@ -174,69 +174,129 @@ Function to To display all the current records in the read-in data
 -----------------------------------------------------------------*/
 void showall_operation()
 {
-    // Verify if the database is loaded
     if (!databaseLoaded)
     {
-        // Print an error message if the database has not been loaded
         printf("CMS: Database is not loaded. Please load the database first.\n");
         return;
     }
-
-    // Verify if there are any records to display
-    if (recordCount > 0)
+    if (recordCount <= 0)
     {
-        // Print a message indicating the records will be displayed
-        printf("CMS: Here are all the records found in the table \"%s\".\n", tableName);
+        printf("CMS: No records available to display.\n");
+        return;
+    }
+    // Print a message indicating the records will be displayed
+    printf("CMS: Here are all the records found in the table \"%s\".\n", tableName);
 
-        // Initialize variables to determine maximum column widths
-        int maxNameLength = strlen("Name"); // Start with the length of the "Name" header
-        int maxProgrammeLength = strlen("Programme"); // Start with the length of the "Programme" header
+    // Initialize variables to determine maximum column widths
+    int maxNameLength = strlen("Name"); // Start with the length of the "Name" header
+    int maxProgrammeLength = strlen("Programme"); // Start with the length of the "Programme" header
 
-        // Loop through each record to find the longest name and programme lengths
-        for (int i = 0; i < recordCount; i++)
+    // Loop through each record to find the longest name and programme lengths
+    for (int i = 0; i < recordCount; i++)
+    {
+        int nameLength = (int)strlen(records[i].Name);// Get the length of the current record's name
+        int programmeLength = (int)strlen(records[i].Programme); // Get the length of the current record's programme
+
+        if (nameLength > maxNameLength) 
+            maxNameLength = nameLength; // Update maxNameLength if the current name is longer
+        if (programmeLength > maxProgrammeLength)
+            maxProgrammeLength = programmeLength; // Update maxProgrammeLength if the current programme is longer
+    }
+
+    maxNameLength += 3;
+    maxProgrammeLength += 3;
+
+    // Create format strings dynamically based on the maximum lengths
+    char formatHeader[100], formatRow[100];
+    // Find max widths for each custom column
+    int customWidth[MAX_CUSTOM_COLUMN_NO];
+
+    for (int c = 0; c < num_custom_cols; c++)
+    {
+        int maxLen = (int)strlen(custom_column[c].name);
+
+        for (int i = 1; i < recordCount; i++)   // start from 1; 0 is header
         {
-            int nameLength = strlen(records[i].Name); // Get the length of the current record's name
-            int programmeLength = strlen(records[i].Programme); // Get the length of the current record's programme
-            if (nameLength > maxNameLength)
-                maxNameLength = nameLength; // Update maxNameLength if the current name is longer
-            if (programmeLength > maxProgrammeLength)
-                maxProgrammeLength = programmeLength; // Update maxProgrammeLength if the current programme is longer
+            char temp[MAX_COLUMN_DATA_LENGTH];
+
+            if (strcmp(custom_column[c].type, "int") == 0)
+            {
+                snprintf(temp, sizeof(temp), "%d", records[i].custom_column[c].int_value);
+            }
+            else if (strcmp(custom_column[c].type, "float") == 0)
+            {
+                snprintf(temp, sizeof(temp), "%.2f", records[i].custom_column[c].float_value);
+            }
+            else if (strcmp(custom_column[c].type, "string") == 0)
+            {
+                snprintf(temp, sizeof(temp), "%s", records[i].custom_column[c].string_value);
+            }
+            else
+            {
+                temp[0] = '\0';
+            }
+
+            int len = (int)strlen(temp);
+            if (len > maxLen) 
+            maxLen = len;
         }
 
-        // Create format strings dynamically based on the maximum lengths
-        char formatHeader[100], formatRow[100];
-        snprintf(formatHeader, sizeof(formatHeader), "%%-8s %%-%ds %%-%ds %%s\n", maxNameLength+3, maxProgrammeLength+3);
-        // Format for header: %-8s for "ID", dynamic width for "Name" and "Programme", and default for "Mark"
-        snprintf(formatRow, sizeof(formatRow), "%%-8d %%-%ds %%-%ds %%.1f\n", maxNameLength+3, maxProgrammeLength+3);
-        // Format for rows: %-8d for ID, dynamic width for "Name" and "Programme", and %.1f for "Mark" (1 decimal place)
-
-
-
-        // Loop through each record and print it
-        for (int i = 0; i < recordCount; i++)
+        customWidth[c] = maxLen + 3;
+    }
+    // Format for header: %-8s for "ID", dynamic width for "Name" and "Programme", and default for "Mark"
+    snprintf(formatHeader, sizeof(formatHeader), "%%-8s %%-%ds %%-%ds %%s\n", maxNameLength+5, maxProgrammeLength+5);
+    // Format for rows: %-8d for ID, dynamic width for "Name" and "Programme", and %.1f for "Mark" (1 decimal place)
+    snprintf(formatRow, sizeof(formatRow), "%%-8d %%-%ds %%-%ds %%.1f\n", maxNameLength+5, maxProgrammeLength+5);
+    
+    // Print records: header row (ID == 0) and then data rows
+    for (int i = 0; i < recordCount; i++)
+    {
+        if (records[i].ID == 0)
         {
-            if (records[i].ID == 0) // Special case: Header record (ID = 0)
+            // No new columns added
+            if (num_custom_cols == 0)
             {
-                // Print the header row from the records array (if present)
                 printf(formatHeader, "ID", records[i].Name, records[i].Programme, "Mark");
             }
             else
             {
-                // Print the current record's data using the row format
-                printf(formatRow,
-                       records[i].ID,         // Print the ID
-                       records[i].Name,       // Print the name
-                       records[i].Programme,  // Print the programme
-                       records[i].Mark);      // Print the mark
+                printf("%-8s %-*s %-*s %s", "ID", maxNameLength, records[i].Name, maxProgrammeLength, records[i].Programme, "Mark");
+
+                // Custom column headers
+                for (int c = 0; c < num_custom_cols; c++)
+                {
+                    printf(" %-*s", customWidth[c], custom_column[c].name);
+                }
+                printf("\n");
             }
         }
-    }
-    else
-    {
-        // Print an error message if there are no records to display
-        printf("CMS: No records available to display.\n");
+        else
+        {
+            //Print data row
+            printf("%-8d %-*s %-*s %.1f", records[i].ID, maxNameLength, records[i].Name, maxProgrammeLength, 
+                records[i].Programme, records[i].Mark);
+
+            // Print added Custom column values
+            for (int c = 0; c < num_custom_cols; c++)
+            {
+                if (strcmp(custom_column[c].type, "int") == 0)
+                {
+                    printf(" %-*d", customWidth[c], records[i].custom_column[c].int_value);    
+                }
+                else if (strcmp(custom_column[c].type, "float") == 0)
+                {
+                    printf(" %-*.2f", customWidth[c], records[i].custom_column[c].float_value);
+                }
+                else if (strcmp(custom_column[c].type, "string") == 0)
+                {
+                    printf(" %-*s", customWidth[c], records[i].custom_column[c].string_value);
+                }
+            }
+            printf("\n");
+        }
     }
 }
+
 
 /*--------------------------
 To insert a new data record
@@ -503,15 +563,20 @@ void summary_statics_operation() {
     }
 
     int totalStudents = recordCount - 1;   // recordCount is total lines including header, -1 excludes header and get actual students 
-    float sum = 0;
+    float sum = 0.0f;
 
     // Initialize using first student
     float highest = records[1].Mark;
     float lowest = records[1].Mark;
-    char highestName[MAX_LENGTH_NAME];
-    char lowestName[MAX_LENGTH_NAME];
-    strcpy(highestName, records[1].Name);
-    strcpy(lowestName, records[1].Name);
+
+    int highestScoreIndex[MAX_RECORDS];
+    int lowestScoreIndex[MAX_RECORDS];
+
+    int highestCount = 0;
+    int lowestCount = 0;
+
+    highestScoreIndex[highestCount++] = 1;
+    lowestScoreIndex[lowestCount++] = 1;
 
     for (int i = 1; i < recordCount; i++) {
         float mark = records[i].Mark;
@@ -519,12 +584,20 @@ void summary_statics_operation() {
 
         if (mark > highest) {
             highest = mark;
-            strcpy(highestName, records[i].Name);
+            highestCount = 0; // Reset count
+            highestScoreIndex[highestCount++] = i;
+        }
+        else if (mark == highest) {
+            highestScoreIndex[highestCount++] = i;
         }
 
         if (mark < lowest) {
             lowest = mark;
-            strcpy(lowestName, records[i].Name);
+            lowestCount = 0; // Reset count
+            lowestScoreIndex[lowestCount++] = i;
+        }
+        else if (mark == lowest) {
+            lowestScoreIndex[lowestCount++] = i;
         }
     }
 
@@ -533,9 +606,26 @@ void summary_statics_operation() {
     printf("CMS: Summary of Student Records\n");
     printf("Total number of students : %d\n", totalStudents);
     printf("Average mark            : %.2f\n", avg);
-    printf("Highest mark            : %.1f (%s)\n", highest, highestName);
-    printf("Lowest mark             : %.1f (%s)\n", lowest, lowestName);
+
+    printf("Highest mark            : %.1f (", highest);
+    for(int i = 0; i < highestCount; i++) {
+        printf("%s", records[highestScoreIndex[i]].Name);
+        if (i < highestCount - 1) {
+            printf(", ");
+        }
+    }
+    printf(")\n");
+
+    printf("Lowest mark             : %.1f (", lowest);
+    for(int i = 0; i < lowestCount; i++) {
+        printf("%s", records[lowestScoreIndex[i]].Name);
+        if (i < lowestCount - 1) {
+            printf(", ");
+        }
+    }
+    printf(")\n");
 }
+
 
 /*-------------------------------------------
 Function to add new columns in the database
