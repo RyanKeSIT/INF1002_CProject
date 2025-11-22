@@ -38,7 +38,7 @@ int main(){
         printf("  DELETE ID=<id>                    - Delete a record by ID\n");
         printf("  SAVE                              - Save the database file\n");
         printf("  SORT                              - Sort the records\n");
-        printf("  UNIQUE                            - Unique Feature\n");
+        printf("  ADD COLUMN Name=<value>           - Unique Feature: Adds new column\n");
         printf("  EXIT                              - Exit the program\n");
         printf("Please Select an Operation to Perform:");
         printf("\nP3_4: ");
