@@ -28,17 +28,17 @@ int main(){
         printf("\n==================================\n");
         printf("Class Management System (CMS) Menu\n");
         printf("==================================\n");
-        printf("  OPEN                              - Open the database file & read in all the records\n");
-        printf("  SHOW ALL                          - Show all records\n");
-        printf("  INSERT ID=<id>                    - Insert a new record\n");
-        printf("  QUERY ID=<id>                     - Query a record by ID\n");
-        printf("  UPDATE ID=<id> <field>=<value>    - Update a record by ID\n");
-        printf("  DELETE ID=<id>                    - Delete a record by ID\n");
-        printf("  SAVE                              - Save the database file\n");
-        printf("  SORT                              - Sort the records\n");
-        printf("  SUMMARY                           - Summary of the records\n");
-        printf("  ADD COLUMN Name=<value>           - Unique Feature: Adds new column\n");
-        printf("  EXIT                              - Exit the program\n");
+        printf("  OPEN                                        - Open the database file & read in all the records\n");
+        printf("  SHOW ALL                                    - Show all records\n");
+        printf("  INSERT ID=<id>                              - Insert a new record\n");
+        printf("  QUERY ID=<id>                               - Query a record by ID\n");
+        printf("  UPDATE ID=<id> \"<field>=<value>\" \"<...>\"    - Update a record by ID\n");
+        printf("  DELETE ID=<id>                              - Delete a record by ID\n");
+        printf("  SORT                                        - Sort the records\n");
+        printf("  SUMMARY                                     - Summary of the records\n");
+        printf("  ADD COLUMN Name=<value>                     - Unique Feature: Adds new column\n");
+        printf("  SAVE                                        - Save the database file\n");
+        printf("  EXIT                                        - Exit the program\n");
         printf("Please Select an Operation to Perform:");
         printf("\nP3_4: ");
         scanf(" %[^\n]", command); // Read user input until newline
