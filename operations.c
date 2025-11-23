@@ -166,7 +166,7 @@ void open_operation(const char *filename)
                             strncpy(records[recordCount].custom_column[j].string_value, start, sizeof(records[recordCount].custom_column[j].string_value) - 1);
                             records[recordCount].custom_column[j].string_value[sizeof(records[recordCount].custom_column[j].string_value) - 1] = '\0';
                         }
-                    }
+                    }                    
                     current_pos = next_tab ? next_tab + 1 : NULL; //Move to the next custom column data
                 }
             }
