@@ -71,7 +71,7 @@ const char *valid_column_types[NUM_COLUMN_TYPES] = {"int", "float", "string"};
 void open_operation(const char *filename);
 void showall_operation();
 void insert_operation(const char* command);
-void query_operation();
+void query_operation(char* command);
 void update_operation();
 void delete_operation();
 void save_operation(const char *filename, const StudentRecords *db, int count, newColumn custom_column[], int num_custom_cols);
@@ -92,4 +92,5 @@ int compMarksDescend(const void *a, const void *b); // Custom function to sort t
 int checkRecordIDExist_operation(int id); // For insert operation
 int checkColumnNameExists(const char *colName, newColumn custom_column[], int num_custom_cols); //For add column operation
 int isValidColumnType(const char *colType); //For add column operation
+void input_new_column_data(const char *colName, const char *colType, int colIndex);
 #endif
