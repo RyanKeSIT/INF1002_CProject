@@ -92,8 +92,6 @@ void open_operation(const char *filename)
     strncpy(records[0].Programme, "Programme", sizeof(records[0].Programme) - 1); // Set "Programme" header
     records[0].Mark = 0.0f;  // Set "Mark" header
 
-    recordCount = 1;  // Start counting number of student records
-
     // Process each data line
     while (fgets(line, sizeof(line), file))
     {
