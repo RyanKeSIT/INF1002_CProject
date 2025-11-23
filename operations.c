@@ -258,16 +258,21 @@ void showall_operation()
 
     // Create format strings dynamically based on the maximum lengths
     char formatHeader[100], formatRow[100];
+
     // Find max widths for each custom column
     int customWidth[MAX_CUSTOM_COLUMN_NO];
 
+    maxNameLength += 3;
+    maxProgrammeLength += 3;
+
+    //Compute the maximum lengths for each custom column by checking all rows and their types (int, float, string).
     for (int c = 0; c < num_custom_cols; c++)
     {
         int maxLen = (int)strlen(custom_column[c].name);
 
         for (int i = 1; i < recordCount; i++)   // start from 1; 0 is header
         {
-            char temp[MAX_COLUMN_DATA_LENGTH];
+            char temp[MAX_COLUMN_DATA_LENGTH]; // temp buffer to hold string representation
 
             if (strcmp(custom_column[c].type, "int") == 0)
             {
@@ -346,8 +351,6 @@ void showall_operation()
         }
     }
 }
-
-
 
 /*--------------------------
 To insert a new data record
@@ -833,34 +836,46 @@ void summary_statics_operation() {
         return;
     }
 
-    if (recordCount <= 1) { // Only header exists
+    if (recordCount <= 0) { // Only header exists
         printf("CMS: No student records available.\n");
         return;
     }
 
-    int totalStudents = recordCount - 1;   // recordCount is total lines including header, -1 excludes header and get actual students 
-    float sum = 0;
+    int totalStudents = recordCount; // recordCount is total lines including header, -1 excludes header and get actual students
+    float sum = 0.0f; //sum of all marks, to calculate average
 
     // Initialize using first student
     float highest = records[1].Mark;
     float lowest = records[1].Mark;
-    char highestName[MAX_LENGTH_NAME];
-    char lowestName[MAX_LENGTH_NAME];
-    strcpy(highestName, records[1].Name);
-    strcpy(lowestName, records[1].Name);
 
-    for (int i = 1; i < recordCount; i++) {
+    // store indices of students who have the highest and lowest scores
+    int highestScoreIndex[MAX_RECORDS];
+    int lowestScoreIndex[MAX_RECORDS];
+    
+    // track how many students share the highest and lowest scores
+    int highestCount = 0;
+    int lowestCount = 0;
+
+    for (int i = 0; i < recordCount; i++) {
         float mark = records[i].Mark;
         sum += mark;
 
         if (mark > highest) {
             highest = mark;
-            strcpy(highestName, records[i].Name);
+            highestCount = 0; // Reset count
+            highestScoreIndex[highestCount++] = i;
+        }
+        else if (mark == highest) {
+            highestScoreIndex[highestCount++] = i;
         }
 
         if (mark < lowest) {
             lowest = mark;
-            strcpy(lowestName, records[i].Name);
+            lowestCount = 0; // Reset count
+            lowestScoreIndex[lowestCount++] = i;
+        }
+        else if (mark == lowest) {
+            lowestScoreIndex[lowestCount++] = i;
         }
     }
 
@@ -869,9 +884,26 @@ void summary_statics_operation() {
     printf("CMS: Summary of Student Records\n");
     printf("Total number of students : %d\n", totalStudents);
     printf("Average mark            : %.2f\n", avg);
-    printf("Highest mark            : %.1f (%s)\n", highest, highestName);
-    printf("Lowest mark             : %.1f (%s)\n", lowest, lowestName);
+
+    printf("Highest mark            : %.1f (", highest); 
+    for(int i = 0; i < highestCount; i++) { // loop through all students with highest mark
+        printf("%s", records[highestScoreIndex[i]].Name); 
+        if (i < highestCount - 1) { // if not the last student, print comma and space to separate names
+            printf(", ");
+        }
+    }
+    printf(")\n");
+
+    printf("Lowest mark             : %.1f (", lowest);
+    for(int i = 0; i < lowestCount; i++) {
+        printf("%s", records[lowestScoreIndex[i]].Name);
+        if (i < lowestCount - 1) {
+            printf(", ");
+        }
+    }
+    printf(")\n");
 }
+
 
 /*-------------------------------------------
 Function to add new columns in the database
