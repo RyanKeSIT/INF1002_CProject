@@ -71,9 +71,11 @@ const char *valid_column_types[NUM_COLUMN_TYPES] = {"int", "float", "string"};
 void open_operation(const char *filename);
 void showall_operation();
 void insert_operation(const char* command);
-void query_operation();
 void update_operation(char *command);
 void delete_operation(char *command);
+void query_operation(char* command);
+void update_operation();
+void delete_operation();
 void save_operation(const char *filename, const StudentRecords *db, int count, newColumn custom_column[], int num_custom_cols);
 void sort_operation();
 void summary_statics_operation();
@@ -83,9 +85,14 @@ void add_column_operation(const char* command, newColumn custom_column[], int *n
  Prototypes of Other Functions Required by Core Functions
 --------------------------------------------------------*/
 void toUpperCase(char *str); // Convert commandPrefix to uppercase
+void save_column_metafile(newColumn custom_column[], int num_custom_cols);
+void load_column_metadata(const char *filename, newColumn custom_column[], int *num_custom_cols);
+int compIDAscend(const void *a, const void *b); // Custom function to sort the ID (Ascending Order)
+int compIDDescend(const void *a, const void *b); // Custom function to sort the ID (Descending Order)
+int compMarksAscend(const void *a, const void *b); // Custom function to sort the Marks (Ascending Order)
+int compMarksDescend(const void *a, const void *b); // Custom function to sort the Marks (Descending Order)
 int checkRecordIDExist_operation(int id); // For insert operation
 int checkColumnNameExists(const char *colName, newColumn custom_column[], int num_custom_cols); //For add column operation
 int isValidColumnType(const char *colType); //For add column operation
-void save_column_metafile(newColumn custom_column[], int num_custom_cols);
-void load_column_metadata(const char *filename, newColumn custom_column[], int *num_custom_cols);
+void input_new_column_data(const char *colName, const char *colType, int colIndex);
 #endif
