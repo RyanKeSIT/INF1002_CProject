@@ -27,7 +27,7 @@ int main(){
     printf("Date: 25 November 2025 (Tuesday)\n\n");
     //Loop main menu until user input "EXIT"
     do {    
-        printf("==================================\n");
+        printf("\n==================================\n");
         printf("Class Management System (CMS) Menu\n");
         printf("==================================\n");
         printf("  OPEN                              - Open the database file & read in all the records\n");
@@ -38,9 +38,9 @@ int main(){
         printf("  DELETE ID=<id>                    - Delete a record by ID\n");
         printf("  SAVE                              - Save the database file\n");
         printf("  SORT                              - Sort the records\n");
-        printf("  UNIQUE                            - Unique Feature\n");
+        printf("  ADD COLUMN Name=<value>           - Unique Feature: Adds new column\n");
         printf("  EXIT                              - Exit the program\n");
-        printf("Please Select an Operation to Perform: ");
+        printf("Please Select an Operation to Perform:");
         printf("\nP3_4: ");
         scanf(" %[^\n]", command); // Read user input until newline
 
