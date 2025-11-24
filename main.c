@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
 #include "cms.h"
 #include "operations.c"
@@ -30,16 +28,17 @@ int main(){
         printf("\n==================================\n");
         printf("Class Management System (CMS) Menu\n");
         printf("==================================\n");
-        printf("  OPEN                              - Open the database file & read in all the records\n");
-        printf("  SHOW ALL                          - Show all records\n");
-        printf("  INSERT ID=<id>                    - Insert a new record\n");
-        printf("  QUERY ID=<id>                     - Query a record by ID\n");
-        printf("  UPDATE ID=<id> <field>=<value>    - Update a record by ID\n");
-        printf("  DELETE ID=<id>                    - Delete a record by ID\n");
-        printf("  SAVE                              - Save the database file\n");
-        printf("  SORT                              - Sort the records\n");
-        printf("  ADD COLUMN Name=<value>           - Unique Feature: Adds new column\n");
-        printf("  EXIT                              - Exit the program\n");
+        printf("  OPEN                                        - Open the database file & read in all the records\n");
+        printf("  SHOW ALL                                    - Show all records\n");
+        printf("  INSERT ID=<id>                              - Insert a new record\n");
+        printf("  QUERY ID=<id>                               - Query a record by ID\n");
+        printf("  UPDATE ID=<id> \"<field>=<value>\" \"<...>\"    - Update a record by ID\n");
+        printf("  DELETE ID=<id>                              - Delete a record by ID\n");
+        printf("  SORT                                        - Sort the records\n");
+        printf("  SUMMARY                                     - Summary of the records\n");
+        printf("  ADD COLUMN Name=<value>                     - Unique Feature: Adds new column\n");
+        printf("  SAVE                                        - Save the database file\n");
+        printf("  EXIT                                        - Exit the program\n");
         printf("Please Select an Operation to Perform:");
         printf("\nP3_4: ");
         scanf(" %[^\n]", command); // Read user input until newline
@@ -68,11 +67,11 @@ int main(){
         }
         else if (strncmp(commandPrefix, "UPDATE", 6) == 0){
             // Update the data for a record with a given student ID
-            update_operation();
+           // update_operation(command);
         }
         else if (strcmp(commandPrefix, "DELETE") == 0){
             //  Delete the record with a given student ID
-            delete_operation();
+            // delete_operation(command);
         }
         else if (strcmp(commandPrefix, "SAVE") == 0){
             //Only save when file is opened
