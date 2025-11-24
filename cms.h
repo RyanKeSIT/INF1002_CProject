@@ -6,7 +6,6 @@
 /*---------------
  Define Constants
 ----------------*/
-#include <corecrt_search.h>
 #define DB_FILENAME "P3_4-CMS.txt"        // Default filename
 #define META_FILENAME "customcolumn.meta" // Meta file name of custom column
 
@@ -18,8 +17,7 @@
 #define NUM_DEFAULT_COLS 4     // Initial number of columns
 #define MAX_CUSTOM_COLUMN_NO 5 // Max number of column user can add
 #define MAX_CUSTOM_COL_NAME 20 // Max length of column name
-#define MAX_COLUMN_DATA_LENGTH                                                 \
-  20                       // Max length of data in column that user added
+#define MAX_COLUMN_DATA_LENGTH 20                       // Max length of data in column that user added
 #define MAX_RECORDS 100    // Max number of records in database
 #define NUM_COLUMN_TYPES 3 // Number of valid column types
 

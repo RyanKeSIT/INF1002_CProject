@@ -1,7 +1,7 @@
-#include "cms.h"
-#include "operations.c"
 #include <stdio.h>
 #include <string.h>
+#include "cms.h"
+#include "operations.c"
 
 
 int main() {
