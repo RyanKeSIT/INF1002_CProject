@@ -1,6 +1,5 @@
 #include "./tools/splice.c"
 #include "cms.h"
-#include <corecrt_search.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,10 +8,12 @@
 /*-------------------------------------------------
 Convert user input for operation choice to uppercase
 ----------------------------------------------------*/
-void toUpperCase(char *str) {
+void toUpperCase(char *str)
+{
   // Loop through each character in the string until reaching the null
   // terminator
-  for (int i = 0; str[i]; i++) {
+  for (int i = 0; str[i]; i++)
+  {
     // Convert the current character to uppercase using toupper function
     str[i] = toupper(str[i]);
   }
@@ -21,18 +22,17 @@ void toUpperCase(char *str) {
 /*-------------------------------------------------
 Open the database file and read in all the records
 --------------------------------------------------*/
-void open_operation(const char *filename) {
+void open_operation(const char *filename)
+{
   // Open the file in read mode
   FILE *file = fopen(filename, "r");
-  if (file == NULL) {
-    // If cannot be found or opened, then display error message
-    printf("CMS: Cannot locate file, check file name \"%s\".\n", filename);
+  if (file == NULL)
+  {
+    printf("CMS: Cannot locate file, check file name \"%s\".\n", filename); // If cannot be found or opened, then display error message
     return;
   }
 
-  char line[200];  //  to store 200 chars for each line read from the file (we
-                   //  dont expect each line to be more than 200 chars including
-                   //  \0)
+  char line[200];  // store 200 chars for each line read from the file
   recordCount = 0; // Reset the record count
   int isEmpty = 1; // Flag to check if the file has non-whitespace content
 
@@ -58,33 +58,25 @@ void open_operation(const char *filename) {
     return;
   }
 
-  // Reset file pointer to beginning after checking file is empty which reacches
-  // EOF
+  // Rewind and load column metadata
   rewind(file);
-
-  // Load column definitions
   load_column_metadata(filename, custom_column, &num_custom_cols);
 
-  // Initialize tableName to "Unknown" in case we don't find it (error handling)
+  // Load column definitions
   strcpy(tableName, "Unknown <There are no table name>");
-
-  // Read each line until we find the table name
-  while (fgets(line, sizeof(line), file)) {
-    // Verify if this line contains "Table Name:"
-    if (strstr(line, "Table Name:") != NULL) {
-      // Move pointer to the text after "Table Name:"
-      char *pos = strstr(line, "Table Name:") + strlen("Table Name:");
-
-      // Trim any leading whitespace
-      while (isspace(*pos))
+  while (fgets(line, sizeof(line), file))
+  {
+    char *pos = strstr(line, "Table Name:");
+    if (pos != NULL)
+    {
+      pos += strlen("Table Name:");
+      while (isspace((unsigned char)*pos))
         pos++;
 
-      // Copy the table name to the variable
       strncpy(tableName, pos, sizeof(tableName) - 1);
-      tableName[strcspn(tableName, "\n")] =
-          '\0'; // Remove trailing newline for readability
-
-      break; // Exit loop after finding the table name
+      tableName[sizeof(tableName) - 1] = '\0';
+      tableName[strcspn(tableName, "\n")] = '\0';
+      break;
     }
   }
 
@@ -98,10 +90,12 @@ void open_operation(const char *filename) {
 
   recordCount = 1; // Start counting number of student records
 
-  // Process each data line
-  while (fgets(line, sizeof(line), file)) {
-    // Ignore empty lines or header lines in the file
-    if (strstr(line, "ID")) {
+  // Read all data lines (including custom columns)
+  while (fgets(line, sizeof(line), file))
+  {
+    // skip header line
+    if (strstr(line, "ID"))
+    {
       continue;
     }
 
@@ -110,133 +104,116 @@ void open_operation(const char *filename) {
     char programme[50]; // Variable to store the programme name
     float mark;         // Variable to store the mark
 
-    int matched =
-        sscanf(line, "%d %49[^\t] %49[^\t] %f", &id, name, programme, &mark);
+    int matched = sscanf(line, "%d %49[^\t] %49[^\t] %f",
+                         &id, name, programme, &mark);
 
-    if (matched == 4) {
-
+    if (matched == 4)
+    {
+      // Define core columns
       records[recordCount].ID = id;
       strncpy(records[recordCount].Name, name,
               sizeof(records[recordCount].Name) - 1);
+      records[recordCount].Name[sizeof(records[recordCount].Name) - 1] = '\0';
+
       strncpy(records[recordCount].Programme, programme,
               sizeof(records[recordCount].Programme) - 1);
+      records[recordCount].Programme[sizeof(records[recordCount].Programme) - 1] = '\0';
+
       records[recordCount].Mark = mark;
 
-      recordCount++;
-    } else {
-
-      printf("CMS: Warning: Could not read line: %s\n", line);
-    }
-
-    if (recordCount >= MAX_RECORDS) {
-      // Display error message and break out of the loop
-      printf("CMS: Warning: Maximum record limit reached.\n");
-      break;
-    }
-  }
-
-  // Add the header as the first "record" in the array
-  records[0].ID = 0; // Set ID to 0 or any special value for the header
-  strncpy(records[0].Name, "Name",
-          sizeof(records[0].Name) - 1); // Set "Name" header
-  strncpy(records[0].Programme, "Programme",
-          sizeof(records[0].Programme) - 1); // Set "Programme" header
-  records[0].Mark = 0.0f;                    // Set "Mark" header
-
-  // Process each data line
-  while (fgets(line, sizeof(line), file)) {
-    // Ignore empty lines or header lines in the file
-    if (strstr(line, "ID")) {
-      continue;
-    }
-
-    int id;             // Variable to store the ID
-    char name[50];      // Variable to store the name
-    char programme[50]; // Variable to store the programme name
-    float mark;         // Variable to store the mark
-
-    int matched =
-        sscanf(line, "%d %49[^\t] %49[^\t] %f", &id, name, programme, &mark);
-
-    if (matched == 4) {
-
-      records[recordCount].ID = id;
-      strncpy(records[recordCount].Name, name,
-              sizeof(records[recordCount].Name) - 1);
-      strncpy(records[recordCount].Programme, programme,
-              sizeof(records[recordCount].Programme) - 1);
-      records[recordCount].Mark = mark;
-
-      // Skip 4 default columns to reach the start of custom columns
-      char *current_pos = line; // Pointer to current position in the current
-                                // line being processed
-
-      // Loop through data of default columns to get to custom columns
-      for (int i = 0; i < 4; i++) {
-        current_pos = strchr(current_pos, '\t'); // Find next tab
-        if (current_pos)
-          current_pos++; // Skip the tab to go to next custom column data
+      // Initialise custom columns to defaults
+      for (int j = 0; j < num_custom_cols; j++)
+      {
+        if (strcmp(custom_column[j].type, "int") == 0)
+        {
+          records[recordCount].custom_column[j].int_value = 0;
+        }
+        else if (strcmp(custom_column[j].type, "float") == 0)
+        {
+          records[recordCount].custom_column[j].float_value = 0.0f;
+        }
+        else if (strcmp(custom_column[j].type, "string") == 0)
+        {
+          records[recordCount].custom_column[j].string_value[0] = '\0';
+        }
       }
 
-      // Loop through custom columns to read custom column data
-      for (int j = 0; j < num_custom_cols && current_pos; j++) {
-        // Find the next tab or newline
+      // now parse custom column values from the line
+      char *current_pos = line;
+
+      // skip the first 4 tab-separated fields: ID, Name, Programme, Mark
+      for (int i = 0; i < 4 && current_pos; i++)
+      {
+        current_pos = strchr(current_pos, '\t');
+        if (current_pos)
+          current_pos++;
+      }
+
+      // read each custom column
+      for (int j = 0; j < num_custom_cols && current_pos; j++)
+      {
         char *next_tab = strchr(current_pos, '\t');
         char *newline = strchr(current_pos, '\n');
 
-        // Determine the end of this field
-        char *field_end =
-            next_tab; // points to tab after the current custom data
-        // If there is no more tabs; end of line
-        if (!field_end || (newline && newline < field_end)) {
+        char *field_end = next_tab;
+        if (!field_end || (newline && newline < field_end))
+        {
           field_end = newline;
         }
-        // If tab
-        if (field_end) {
+      }
+
+        if (field_end)
+        {
           int field_length = field_end - current_pos;
-          // Checks if custom data is empty
-          if (field_length > 0) {
+          if (field_length > 0)
+          {
             char field_data[MAX_COLUMN_DATA_LENGTH];
-            strncpy(field_data, current_pos, field_length); // Copy custom data
+            if (field_length >= MAX_COLUMN_DATA_LENGTH)
+              field_length = MAX_COLUMN_DATA_LENGTH - 1;
+
+            strncpy(field_data, current_pos, field_length);
             field_data[field_length] = '\0';
 
-            // Trim whitespace
-            char *start = field_data; // points to space before field
-            char *end = field_data + strlen(field_data) -
-                        1; // points to space after field
-            while (isspace(*start))
-              start++; // Skip spaces
-            while (end > start && isspace(*end))
-              end--;           // Skip trailing spaces
-            *(end + 1) = '\0'; //// Terminate the string at the new end position
-                               /// after trimming
+            // trim spaces
+            char *start = field_data;
+            char *end = field_data + strlen(field_data) - 1;
+            while (isspace((unsigned char)*start))
+              start++;
+            while (end > start && isspace((unsigned char)*end))
+              end--;
+            *(end + 1) = '\0';
 
-            // Store data based on column type
-            if (strcmp(custom_column[j].type, "int") == 0) {
+            // store according to type
+            if (strcmp(custom_column[j].type, "int") == 0)
+            {
               records[recordCount].custom_column[j].int_value = atoi(start);
-            } else if (strcmp(custom_column[j].type, "float") == 0) {
-              records[recordCount].custom_column[j].float_value = atof(start);
-            } else if (strcmp(custom_column[j].type, "string") == 0) {
-              strncpy(
-                  records[recordCount].custom_column[j].string_value, start,
-                  sizeof(records[recordCount].custom_column[j].string_value) -
-                      1);
+            }
+            else if (strcmp(custom_column[j].type, "float") == 0)
+            {
+              records[recordCount].custom_column[j].float_value = (float)atof(start);
+            }
+            else if (strcmp(custom_column[j].type, "string") == 0)
+            {
+              strncpy(records[recordCount].custom_column[j].string_value,
+                      start,
+                      sizeof(records[recordCount].custom_column[j].string_value) - 1);
               records[recordCount].custom_column[j].string_value
-                  [sizeof(records[recordCount].custom_column[j].string_value) -
-                   1] = '\0';
+                  [sizeof(records[recordCount].custom_column[j].string_value) - 1] = '\0';
             }
           }
-          current_pos = next_tab ? next_tab + 1
-                                 : NULL; // Move to the next custom column data
+          current_pos = next_tab ? next_tab + 1 : NULL;
         }
       }
 
       recordCount++;
-    } else {
+    }
+    else
+    {
       printf("CMS: Warning: Could not read line: %s\n", line);
     }
-    if (recordCount >= MAX_RECORDS) {
-      // Display error message and break out of the loop
+
+    if (recordCount >= MAX_RECORDS)
+    {
       printf("CMS: Warning: Maximum record limit reached.\n");
       break;
     }
@@ -249,15 +226,18 @@ void open_operation(const char *filename) {
 
 // Load column definitions from separate meta file
 void load_column_metadata(const char *filename, newColumn custom_column[],
-                          int *num_custom_cols) {
+                          int *num_custom_cols)
+{
   FILE *fptr = fopen(META_FILENAME, "r");
-  if (fptr == NULL) {
+  if (fptr == NULL)
+  {
     *num_custom_cols = 0; // No meta file exists yet
     return;
   }
 
   // Read number of custom columns
-  if (fscanf(fptr, "%d", num_custom_cols) != 1) {
+  if (fscanf(fptr, "%d", num_custom_cols) != 1)
+  {
     printf("CMS: Warning: Could not read meta file format.\n");
     fclose(fptr);
     *num_custom_cols = 0;
@@ -265,9 +245,11 @@ void load_column_metadata(const char *filename, newColumn custom_column[],
   }
 
   // Read each column definition
-  for (int i = 0; i < *num_custom_cols; i++) {
+  for (int i = 0; i < *num_custom_cols; i++)
+  {
     if (fscanf(fptr, "%s %s %d", custom_column[i].name, custom_column[i].type,
-               &custom_column[i].length) != 3) {
+               &custom_column[i].length) != 3)
+    {
       printf("CMS: Warning: Error reading custom columns %d from meta file.\n",
              i);
       break;
@@ -280,12 +262,15 @@ void load_column_metadata(const char *filename, newColumn custom_column[],
 /*----------------------------------------------------------------
 Function to To display all the current records in the read-in data
 -----------------------------------------------------------------*/
-void showall_operation() {
-  if (!databaseLoaded) {
+void showall_operation()
+{
+  if (!databaseLoaded)
+  {
     printf("CMS: Database is not loaded. Please load the database first.\n");
     return;
   }
-  if (recordCount <= 1) {
+  if (recordCount <= 1)
+  {
     printf("CMS: No records available to display.\n");
     return;
   }
@@ -300,7 +285,8 @@ void showall_operation() {
       strlen("Programme"); // Start with the length of the "Programme" header
 
   // Loop through each record to find the longest name and programme lengths
-  for (int i = 0; i < recordCount; i++) {
+  for (int i = 0; i < recordCount; i++)
+  {
     int nameLength = (int)strlen(
         records[i].Name); // Get the length of the current record's name
     int programmeLength = (int)strlen(
@@ -326,7 +312,8 @@ void showall_operation() {
 
   // Compute the maximum lengths for each custom column by checking all rows and
   // their types (int, float, string).
-  for (int c = 0; c < num_custom_cols; c++) {
+  for (int c = 0; c < num_custom_cols; c++)
+  {
     int maxLen = (int)strlen(custom_column[c].name);
 
     for (int i = 1; i < recordCount; i++) // start from 1; 0 is header
@@ -334,16 +321,23 @@ void showall_operation() {
       char temp[MAX_COLUMN_DATA_LENGTH]; // temp buffer to hold string
                                          // representation
 
-      if (strcmp(custom_column[c].type, "int") == 0) {
+      if (strcmp(custom_column[c].type, "int") == 0)
+      {
         snprintf(temp, sizeof(temp), "%d",
                  records[i].custom_column[c].int_value);
-      } else if (strcmp(custom_column[c].type, "float") == 0) {
+      }
+      else if (strcmp(custom_column[c].type, "float") == 0)
+      {
         snprintf(temp, sizeof(temp), "%.2f",
                  records[i].custom_column[c].float_value);
-      } else if (strcmp(custom_column[c].type, "string") == 0) {
+      }
+      else if (strcmp(custom_column[c].type, "string") == 0)
+      {
         snprintf(temp, sizeof(temp), "%s",
                  records[i].custom_column[c].string_value);
-      } else {
+      }
+      else
+      {
         temp[0] = '\0';
       }
 
@@ -364,37 +358,73 @@ void showall_operation() {
            maxNameLength + 5, maxProgrammeLength + 5);
 
   // Print records: header row (ID == 0) and then data rows
-  for (int i = 0; i < recordCount; i++) {
-    if (records[i].ID == 0) {
+  for (int i = 0; i < recordCount; i++)
+  {
+    if (records[i].ID == 0)
+    {
       // No new columns added
-      if (num_custom_cols == 0) {
-        printf(formatHeader, "ID", records[i].Name, records[i].Programme,
-               "Mark");
-      } else {
+      if (num_custom_cols == 0)
+      {
+        char formatHeader[200];
+        char formatRow[200];
+
+        // Build dynamic format strings
+        snprintf(formatHeader, sizeof(formatHeader),
+                 "%%-8s %%-%ds %%-%ds %%s\n",
+                 maxNameLength, maxProgrammeLength);
+
+        snprintf(formatRow, sizeof(formatRow),
+                 "%%-8d %%-%ds %%-%ds %%.1f\n",
+                 maxNameLength, maxProgrammeLength);
+
+        // Print header
+        printf(formatHeader, "ID", "Name", "Programme", "Mark");
+
+        // Print data rows
+        for (int i = 1; i < recordCount; i++)
+        {
+          printf(formatRow,
+                 records[i].ID,
+                 records[i].Name,
+                 records[i].Programme,
+                 records[i].Mark);
+        }
+      }
+      else
+      {
         printf("%-8s %-*s %-*s %s", "ID", maxNameLength, records[i].Name,
                maxProgrammeLength, records[i].Programme, "Mark");
 
         // Custom column headers
-        for (int c = 0; c < num_custom_cols; c++) {
+        for (int c = 0; c < num_custom_cols; c++)
+        {
           printf(" %-*s", customWidth[c], custom_column[c].name);
         }
         printf("\n");
       }
-    } else {
+    }
+    else
+    {
       // Print data row
       printf("%-8d %-*s %-*s %.1f", records[i].ID, maxNameLength,
              records[i].Name, maxProgrammeLength, records[i].Programme,
              records[i].Mark);
 
       // Print added Custom column values
-      for (int c = 0; c < num_custom_cols; c++) {
-        if (strcmp(custom_column[c].type, "int") == 0) {
+      for (int c = 0; c < num_custom_cols; c++)
+      {
+        if (strcmp(custom_column[c].type, "int") == 0)
+        {
           printf(" %-*d", customWidth[c],
                  records[i].custom_column[c].int_value);
-        } else if (strcmp(custom_column[c].type, "float") == 0) {
+        }
+        else if (strcmp(custom_column[c].type, "float") == 0)
+        {
           printf(" %-*.2f", customWidth[c],
                  records[i].custom_column[c].float_value);
-        } else if (strcmp(custom_column[c].type, "string") == 0) {
+        }
+        else if (strcmp(custom_column[c].type, "string") == 0)
+        {
           printf(" %-*s", customWidth[c],
                  records[i].custom_column[c].string_value);
         }
@@ -407,9 +437,11 @@ void showall_operation() {
 /*--------------------------
 To insert a new data record
 ---------------------------*/
-void insert_operation(const char *command) {
+void insert_operation(const char *command)
+{
   // Verify if the database is loaded
-  if (!databaseLoaded) {
+  if (!databaseLoaded)
+  {
     printf("CMS: Database is not loaded. Please load the database first.\n");
     return;
   }
@@ -420,7 +452,8 @@ void insert_operation(const char *command) {
   float mark;               // Variable to store the mark
 
   // Read ID from the command
-  if (sscanf(command, "INSERT ID=%d", &id) != 1) {
+  if (sscanf(command, "INSERT ID=%d", &id) != 1)
+  {
     // If the command does not contain a valid ID, display an error
     printf("CMS: The record insertion contains an invalid command. Please try "
            "again.\n");
@@ -431,14 +464,16 @@ void insert_operation(const char *command) {
   char idStr[20];
   sprintf(idStr, "%d", id);  // Convert the ID to a string
   int idLen = strlen(idStr); // Get the length of the string
-  if (idLen != 7) {
+  if (idLen != 7)
+  {
     // If the ID is not exactly 7 digits, display an error
     printf("CMS: Student ID must be exactly 7 digits.\n");
     return;
   }
 
   // Verify if the ID already exists in the records
-  if (checkRecordIDExist_operation(id) != -1) {
+  if (checkRecordIDExist_operation(id) != -1)
+  {
     // If the ID is found, display a duplicate ID error and exit
     printf("CMS: The record with ID=%d already exists.\n", id);
     return;
@@ -447,7 +482,8 @@ void insert_operation(const char *command) {
   // Verify if the command does not contain additional fields (Name, Programme,
   // Mark)
   if (!strstr(command, "Name=") || !strstr(command, "Programme=") ||
-      !strstr(command, "Mark=")) {
+      !strstr(command, "Mark="))
+  {
     // If additional fields are missing, prompt the user to enter them
     printf("CMS: The record with ID=%d is available. Please enter the details "
            "in the format:\n",
@@ -463,7 +499,8 @@ void insert_operation(const char *command) {
   char *markPos = strstr(command, "Mark="); // Find the position of "Mark="
 
   // If any field is missing or invalid, display an error
-  if (!namePos || !programmePos || !markPos) {
+  if (!namePos || !programmePos || !markPos)
+  {
     printf("CMS: The record insertion contains an invalid command. Please try "
            "again.\n");
     return;
@@ -482,11 +519,12 @@ void insert_operation(const char *command) {
   int programmeLen =
       markPos - programmePos; // Calculate the length of the programme substring
   strncpy(programme, programmePos,
-          programmeLen - 1); // Copy the substring to the 'programme' variable
+          programmeLen - 1);          // Copy the substring to the 'programme' variable
   programme[programmeLen - 1] = '\0'; // Null-terminate the string
 
   // Extract the mark field (after "Mark=")
-  if (sscanf(markPos, "Mark=%f", &mark) != 1) {
+  if (sscanf(markPos, "Mark=%f", &mark) != 1)
+  {
     // If the mark field is invalid, display an error
     printf("CMS: The record insertion contains an invalid command. Please try "
            "again.\n");
@@ -494,8 +532,10 @@ void insert_operation(const char *command) {
   }
 
   // Validate the name (must contain only letters and spaces)
-  for (int i = 0; name[i]; i++) {
-    if (!isalpha(name[i]) && !isspace(name[i])) {
+  for (int i = 0; name[i]; i++)
+  {
+    if (!isalpha(name[i]) && !isspace(name[i]))
+    {
       // If the name contains invalid characters, display an error
       printf("CMS: The record insertion contains an invalid command. Please "
              "try again.\n");
@@ -504,8 +544,10 @@ void insert_operation(const char *command) {
   }
 
   // Validate the programme (must contain only letters and spaces)
-  for (int i = 0; programme[i]; i++) {
-    if (!isalpha(programme[i]) && !isspace(programme[i])) {
+  for (int i = 0; programme[i]; i++)
+  {
+    if (!isalpha(programme[i]) && !isspace(programme[i]))
+    {
       // If the programme contains invalid characters, display an error
       printf("CMS: The record insertion contains an invalid command. Please "
              "try again.\n");
@@ -514,7 +556,8 @@ void insert_operation(const char *command) {
   }
 
   // Validate the mark (must be between 0 and 100)
-  if (mark < 0 || mark > 100) {
+  if (mark < 0 || mark > 100)
+  {
     // If the mark is outside the valid range, display an error
     printf("CMS: The record insertion contains an invalid command. Please try "
            "again.\n");
@@ -535,60 +578,78 @@ void insert_operation(const char *command) {
 
   // Add-on Unique Feature: Add Column
   // Initialise custom columns to default values
-  for (int j = 0; j < num_custom_cols; j++) {
-    if (strcmp(custom_column[j].type, "int") == 0) {
+  for (int j = 0; j < num_custom_cols; j++)
+  {
+    if (strcmp(custom_column[j].type, "int") == 0)
+    {
       records[recordCount].custom_column[j].int_value = 0;
-    } else if (strcmp(custom_column[j].type, "float") == 0) {
+    }
+    else if (strcmp(custom_column[j].type, "float") == 0)
+    {
       records[recordCount].custom_column[j].float_value = 0.0f;
-    } else if (strcmp(custom_column[j].type, "string") == 0) {
+    }
+    else if (strcmp(custom_column[j].type, "string") == 0)
+    {
       records[recordCount].custom_column[j].string_value[0] = '\0';
     }
   }
 
   // Parse optional custom-column values from the command
-  for (int j = 0; j < num_custom_cols; j++) {
+  for (int j = 0; j < num_custom_cols; j++)
+  {
     char pattern[64];
     snprintf(pattern, sizeof(pattern), "%s=", custom_column[j].name);
 
     char *pos = strstr(command, pattern);
-    if (!pos) { // User didn't supply this column in the INSERT, keep default
+    if (!pos)
+    { // User didn't supply this column in the INSERT, keep default
       continue;
     }
     pos += strlen(pattern);
     // Skip leading spaces after '=' if any
-    while (isspace((unsigned char)*pos)) {
+    while (isspace((unsigned char)*pos))
+    {
       pos++;
     }
     // Extract value up to next space or end-of-line
     char valueBuffer[MAX_COLUMN_DATA_LENGTH];
     int k = 0;
     while (*pos != '\0' && !isspace((unsigned char)*pos) &&
-           k < MAX_COLUMN_DATA_LENGTH - 1) {
+           k < MAX_COLUMN_DATA_LENGTH - 1)
+    {
       valueBuffer[k++] = *pos++;
     }
     valueBuffer[k] = '\0';
     // If empty after '=', just leave default
-    if (k == 0) {
+    if (k == 0)
+    {
       continue;
     }
     // Store by type
-    if (strcmp(custom_column[j].type, "int") == 0) {
+    if (strcmp(custom_column[j].type, "int") == 0)
+    {
       int intValue;
-      if (sscanf(valueBuffer, "%d", &intValue) != 1) {
+      if (sscanf(valueBuffer, "%d", &intValue) != 1)
+      {
         printf("CMS: Invalid value '%s' for column %s (expected int).\n",
                valueBuffer, custom_column[j].name);
         return;
       }
       records[recordCount].custom_column[j].int_value = intValue;
-    } else if (strcmp(custom_column[j].type, "float") == 0) {
+    }
+    else if (strcmp(custom_column[j].type, "float") == 0)
+    {
       float floatValue;
-      if (sscanf(valueBuffer, "%f", &floatValue) != 1) {
+      if (sscanf(valueBuffer, "%f", &floatValue) != 1)
+      {
         printf("CMS: Invalid value '%s' for column %s (expected float).\n",
                valueBuffer, custom_column[j].name);
         return;
       }
       records[recordCount].custom_column[j].float_value = floatValue;
-    } else if (strcmp(custom_column[j].type, "string") == 0) {
+    }
+    else if (strcmp(custom_column[j].type, "string") == 0)
+    {
       strncpy(records[recordCount].custom_column[j].string_value, valueBuffer,
               MAX_COLUMN_DATA_LENGTH - 1);
       records[recordCount]
@@ -601,9 +662,12 @@ void insert_operation(const char *command) {
   printf("CMS: The record with ID=%d is successfully inserted.\n", id);
 }
 
-int checkRecordIDExist_operation(int id) {
-  for (int i = 0; i < recordCount; i++) {
-    if (records[i].ID == id) {
+int checkRecordIDExist_operation(int id)
+{
+  for (int i = 0; i < recordCount; i++)
+  {
+    if (records[i].ID == id)
+    {
       return i; // Return the index where the ID was found
     }
   }
@@ -614,17 +678,20 @@ int checkRecordIDExist_operation(int id) {
 /*----------------------------------------------------------------
 To search if there is any existing record with a given student ID.
 -----------------------------------------------------------------*/
-void query_operation(char *command) {
+void query_operation(char *command)
+{
   // Expected format: QUERY ID=<id>
 
   // Verify if the database is loaded
-  if (!databaseLoaded) {
+  if (!databaseLoaded)
+  {
     printf("CMS: Database is not loaded. Please load the database first.\n");
     return;
   }
 
   char *id_ptr = strstr(command, "ID=");
-  if (id_ptr == NULL) {
+  if (id_ptr == NULL)
+  {
     printf("Invalid format. Please use: QUERY ID=<id>\n");
     return;
   }
@@ -636,14 +703,17 @@ void query_operation(char *command) {
   long query_ID_value = strtol(id_ptr, &endptr, 10);
 
   // Check validity: no digits read
-  if (endptr == id_ptr) {
+  if (endptr == id_ptr)
+  {
     printf("Invalid ID. Please ensure only numeric digits are used.\n");
     return;
   }
 
   // Check remaining characters
-  while (*endptr != '\0') {
-    if (!isspace((unsigned char)*endptr)) {
+  while (*endptr != '\0')
+  {
+    if (!isspace((unsigned char)*endptr))
+    {
       printf("Invalid characters after ID. Only digits allowed.\n");
       return;
     }
@@ -658,8 +728,10 @@ void query_operation(char *command) {
 
   int found = 0;
 
-  for (int i = 0; i < recordCount; i++) {
-    if (db[i].ID == query_ID_value) {
+  for (int i = 0; i < recordCount; i++)
+  {
+    if (db[i].ID == query_ID_value)
+    {
       printf("%-10d  %-20s  %-24s  %-5.2f\n", db[i].ID, db[i].Name,
              db[i].Programme, db[i].Mark);
       found = 1;
@@ -667,7 +739,8 @@ void query_operation(char *command) {
     }
   }
 
-  if (!found) {
+  if (!found)
+  {
     printf("Record not found.\n");
   }
 }
@@ -675,9 +748,11 @@ void query_operation(char *command) {
 /*-----------------------------------------------------
 To update the data for a record with a given student ID
 -------------------------------------------------------*/
-void update_operation(char *command) {
+void update_operation(char *command)
+{
   // Verify if the database is loaded
-  if (!databaseLoaded) {
+  if (!databaseLoaded)
+  {
     printf("CMS: Database is not loaded. Please load the database first.\n");
     return;
   }
@@ -685,7 +760,8 @@ void update_operation(char *command) {
   //   Check student ID
   int targetedStudentID;
   char targetedStudentIDStr[20];
-  if (sscanf(command, "UPDATE ID=%d", &targetedStudentID) != 1) {
+  if (sscanf(command, "UPDATE ID=%d", &targetedStudentID) != 1)
+  {
     // If the command does not contain a valid ID, display an error
     printf(
         "CMS: The record upgradation contains an invalid command. Please try "
@@ -695,7 +771,8 @@ void update_operation(char *command) {
   //   Verify student ID length
   sprintf(targetedStudentIDStr, "%d", targetedStudentID);
   int targetedStudentIDLength = strlen(targetedStudentIDStr);
-  if (targetedStudentIDLength != 7) {
+  if (targetedStudentIDLength != 7)
+  {
     // If the ID is not exactly 7 digits, display an error
     printf("CMS: Student ID must be exactly 7 digits.\n");
     return;
@@ -703,14 +780,17 @@ void update_operation(char *command) {
 
   //   Check if record exist in database
   int recordIndex = -1;
-  for (int i = 0; i < recordCount; i++) {
-    if (records[i].ID == targetedStudentID) {
+  for (int i = 0; i < recordCount; i++)
+  {
+    if (records[i].ID == targetedStudentID)
+    {
       recordIndex = i;
       break;
     }
   }
   //   Record does not exist in database
-  if (recordIndex == -1) {
+  if (recordIndex == -1)
+  {
     printf("CMS: The record with ID=%d does not exist.\n", targetedStudentID);
     return;
   }
@@ -721,12 +801,14 @@ void update_operation(char *command) {
     return;
   //   Check if columns were supplied at all
   ptr = strchr(ptr, ' ');
-  if (ptr == NULL) {
+  if (ptr == NULL)
+  {
     printf("CMS: There were no columns supplied to update.\n");
     return;
   }
 
-  while (ptr != NULL && *ptr != '\0') {
+  while (ptr != NULL && *ptr != '\0')
+  {
     // Skip whitespace between key-value pairs
     while (*ptr == ' ')
       ptr++;
@@ -750,11 +832,13 @@ void update_operation(char *command) {
 
     // Check if value is quoted (here we NEED to use quote for multi-space
     // names)
-    if (*ptr == '"') {
+    if (*ptr == '"')
+    {
       // Start of multi-space name
       ptr++; // Skip opening quote
       char *closingQuote = strchr(ptr, '"');
-      if (closingQuote == NULL) {
+      if (closingQuote == NULL)
+      {
         printf("CMS: Missing closing quote for %s\n", targetedField);
         return;
       }
@@ -764,10 +848,13 @@ void update_operation(char *command) {
       targetedValue[valueLen] = '\0';
 
       ptr = closingQuote + 1; // Move past closing quote
-    } else {
+    }
+    else
+    {
       // For unquoted value (read until space or end) [i.e. Name="John Foo]
       int valueLen = 0;
-      while (ptr[valueLen] != ' ' && ptr[valueLen] != '\0') {
+      while (ptr[valueLen] != ' ' && ptr[valueLen] != '\0')
+      {
         valueLen++;
       }
       strncpy(targetedValue, ptr, valueLen);
@@ -777,14 +864,17 @@ void update_operation(char *command) {
     }
 
     // Update the struct field based on supplied key (record was found earlier)
-    if (_stricmp(targetedField, "Name") == 0) {
+    if (_stricmp(targetedField, "Name") == 0)
+    {
       strncpy(records[recordIndex].Name, targetedValue,
               sizeof(records[recordIndex].Name) - 1);
       records[recordIndex].Name[sizeof(records[recordIndex].Name) - 1] = '\0';
       printf("CMS: The record with ID=%d is successfully updated, with %s "
              "as %s\n",
              targetedStudentID, targetedField, targetedValue);
-    } else if (_stricmp(targetedField, "Programme") == 0) {
+    }
+    else if (_stricmp(targetedField, "Programme") == 0)
+    {
       strncpy(records[recordIndex].Programme, targetedValue,
               sizeof(records[recordIndex].Programme) - 1);
       records[recordIndex]
@@ -792,26 +882,34 @@ void update_operation(char *command) {
       printf("CMS: The record with ID=%d is successfully updated, with %s "
              "as %s\n",
              targetedStudentID, targetedField, targetedValue);
-    } else if (_stricmp(targetedField, "Mark") == 0) {
+    }
+    else if (_stricmp(targetedField, "Mark") == 0)
+    {
       records[recordIndex].Mark = atof(targetedValue);
       printf("CMS: The record with ID=%d is successfully updated, with %s "
              "as %f\n",
              targetedStudentID, targetedField, records[recordIndex].Mark);
-    } else {
+    }
+    else
+    {
       // Check if it is a custom column
       int customColIndex = -1;
 
       // Search for the custom column by name
-      for (int j = 0; j < num_custom_cols; j++) {
-        if (_stricmp(targetedField, custom_column[j].name) == 0) {
+      for (int j = 0; j < num_custom_cols; j++)
+      {
+        if (_stricmp(targetedField, custom_column[j].name) == 0)
+        {
           customColIndex = j;
           break;
         }
       }
 
       // If custom column found, update it based on its datatype
-      if (customColIndex != -1) {
-        if (strcmp(custom_column[customColIndex].type, "int") == 0) {
+      if (customColIndex != -1)
+      {
+        if (strcmp(custom_column[customColIndex].type, "int") == 0)
+        {
           records[recordIndex].custom_column[customColIndex].int_value =
               atoi(targetedValue);
           printf("CMS: The record with ID=%d is successfully updated, with "
