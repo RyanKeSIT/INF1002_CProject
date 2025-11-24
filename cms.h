@@ -6,6 +6,7 @@
 /*---------------
  Define Constants
 ----------------*/
+#include <corecrt_search.h>
 #define DB_FILENAME "P3_4-CMS.txt"        // Default filename
 #define META_FILENAME "customcolumn.meta" // Meta file name of custom column
 
