@@ -260,7 +260,6 @@ void load_column_metadata(const char *filename, newColumn custom_column[],
   fclose(fptr);
 }
 
-
 /*----------------------------------------------------------------
 Function to To display all the current records in the read-in data
 -----------------------------------------------------------------*/
